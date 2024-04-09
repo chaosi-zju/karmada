@@ -62,6 +62,7 @@ func MakeCustomMetricsProvider(clusterLister clusterlister.ClusterLister, multiC
 
 // GetMetricByName will query metrics by name from member clusters and return the result
 func (c *CustomMetricsProvider) GetMetricByName(ctx context.Context, name types.NamespacedName, info provider.CustomMetricInfo, metricSelector labels.Selector) (*custom_metrics.MetricValue, error) {
+	klog.Infof("[DEBUG] CustomMetricsProvider GetMetricByName, name: %s, info: %+v", name, info)
 	clusters, err := c.clusterLister.List(labels.Everything())
 	if err != nil {
 		klog.Errorf("Failed to list clusters: %v", err)
@@ -112,6 +113,7 @@ func (c *CustomMetricsProvider) GetMetricByName(ctx context.Context, name types.
 
 // GetMetricBySelector will query metrics by selector from member clusters and return the result
 func (c *CustomMetricsProvider) GetMetricBySelector(ctx context.Context, namespace string, selector labels.Selector, info provider.CustomMetricInfo, metricSelector labels.Selector) (*custom_metrics.MetricValueList, error) {
+	klog.Infof("[DEBUG] CustomMetricsProvider GetMetricBySelector, namespace: %s, selector: %+v", namespace, selector)
 	clusters, err := c.clusterLister.List(labels.Everything())
 	if err != nil {
 		klog.Errorf("Failed to list clusters: %v", err)
@@ -278,6 +280,7 @@ func (c *CustomMetricsProvider) getForNamespace(ctx context.Context, clusterName
 
 // ListAllMetrics returns all metrics in all member clusters
 func (c *CustomMetricsProvider) ListAllMetrics() []provider.CustomMetricInfo {
+	klog.Infof("[DEBUG] CustomMetricsProvider ListAllMetrics")
 	clusters, err := c.clusterLister.List(labels.Everything())
 	if err != nil {
 		klog.Errorf("Failed to list clusters: %v", err)

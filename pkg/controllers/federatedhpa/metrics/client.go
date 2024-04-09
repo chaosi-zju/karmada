@@ -152,18 +152,26 @@ type customMetricsClient struct {
 // for all pods matching the specified selector in the given namespace
 func (c *customMetricsClient) GetRawMetric(metricName string, namespace string, selector labels.Selector, metricSelector labels.Selector) (PodMetricsInfo, time.Time, error) {
 	// observe pull RawMetric latency
+
+	klog.Infof("[DEBUG] customMetricsClient GetRawMetric, metricName: %s, namespace: %s, selector: %+v, metricSelector: %+v",
+		metricName, namespace, selector, metricSelector)
+
 	var err error
 	startTime := time.Now()
 	defer metrics.ObserveFederatedHPAPullMetricsLatency(err, "RawMetric", startTime)
 
 	metrics, err := c.client.NamespacedMetrics(namespace).GetForObjects(schema.GroupKind{Kind: "Pod"}, selector, metricName, metricSelector)
 	if err != nil {
+		klog.Errorf("[DEBUG] GetForObjects failed: %+v", err)
 		return nil, time.Time{}, fmt.Errorf("unable to fetch metrics from custom metrics API: %v", err)
 	}
 
 	if len(metrics.Items) == 0 {
+		klog.Errorf("[DEBUG] no metrics returned from custom metrics API")
 		return nil, time.Time{}, fmt.Errorf("no metrics returned from custom metrics API")
 	}
+
+	klog.Infof("[DEBUG] get metrics success, len: %d", len(metrics.Items))
 
 	res := make(PodMetricsInfo, len(metrics.Items))
 	for _, m := range metrics.Items {
@@ -189,6 +197,15 @@ func (c *customMetricsClient) GetRawMetric(metricName string, namespace string, 
 // object in the given namespace
 func (c *customMetricsClient) GetObjectMetric(metricName string, namespace string, objectRef *autoscalingv2.CrossVersionObjectReference, metricSelector labels.Selector) (int64, time.Time, error) {
 	// observe pull ObjectMetric latency
+
+	if objectRef == nil {
+		klog.Infof("[DEBUG] customMetricsClient GetObjectMetric, metricName: %s, namespace: %s, objectRef: %+v, metricSelector: %+v",
+			metricName, namespace, objectRef, metricSelector)
+	} else {
+		klog.Infof("[DEBUG] customMetricsClient GetObjectMetric, metricName: %s, namespace: %s, objectRef: %+v, metricSelector: %+v",
+			metricName, namespace, *objectRef, metricSelector)
+	}
+
 	var err error
 	startTime := time.Now()
 	defer metrics.ObserveFederatedHPAPullMetricsLatency(err, "ObjectMetric", startTime)
@@ -205,9 +222,11 @@ func (c *customMetricsClient) GetObjectMetric(metricName string, namespace strin
 	}
 
 	if err != nil {
+		klog.Errorf("[DEBUG] unable to fetch metrics from custom metrics API: %v", err)
 		return 0, time.Time{}, fmt.Errorf("unable to fetch metrics from custom metrics API: %v", err)
 	}
 
+	klog.Infof("fetch metrics success: %+v", *metricValue)
 	return metricValue.Value.MilliValue(), metricValue.Timestamp.Time, nil
 }
 
@@ -221,6 +240,10 @@ type externalMetricsClient struct {
 // that match the specified selector.
 func (c *externalMetricsClient) GetExternalMetric(metricName, namespace string, selector labels.Selector) ([]int64, time.Time, error) {
 	// observe pull ExternalMetric latency
+
+	klog.Infof("[DEBUG] externalMetricsClient GetExternalMetric, metricName: %s, namespace: %s, selector: %+v",
+		metricName, namespace, selector)
+
 	var err error
 	startTime := time.Now()
 	defer metrics.ObserveFederatedHPAPullMetricsLatency(err, "ExternalMetric", startTime)

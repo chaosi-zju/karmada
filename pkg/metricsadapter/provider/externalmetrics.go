@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/klog/v2"
 	"k8s.io/metrics/pkg/apis/external_metrics"
 	"sigs.k8s.io/custom-metrics-apiserver/pkg/provider"
 )
@@ -36,10 +37,12 @@ func MakeExternalMetricsProvider() *ExternalMetricsProvider {
 
 // GetExternalMetric will query metrics by selector from member clusters and return the result
 func (c *ExternalMetricsProvider) GetExternalMetric(_ context.Context, _ string, _ labels.Selector, _ provider.ExternalMetricInfo) (*external_metrics.ExternalMetricValueList, error) {
+	klog.Infof("[DEBUG] ExternalMetricsProvider GetExternalMetric called")
 	return nil, fmt.Errorf("karmada-metrics-adapter still not implement it")
 }
 
 // ListAllExternalMetrics returns all metrics in all member clusters
 func (c *ExternalMetricsProvider) ListAllExternalMetrics() []provider.ExternalMetricInfo {
+	klog.Infof("[DEBUG] ExternalMetricsProvider ListAllExternalMetrics called")
 	return []provider.ExternalMetricInfo{}
 }

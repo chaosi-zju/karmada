@@ -349,6 +349,12 @@ func (r *ResourceMetricsProvider) queryNodeMetricsBySelector(selector string) ([
 
 // GetPodMetrics queries metrics by the internal constructed pod
 func (r *ResourceMetricsProvider) GetPodMetrics(pods ...*metav1.PartialObjectMetadata) ([]metrics.PodMetrics, error) {
+	_pods := make([]metav1.PartialObjectMetadata, 0)
+	for _, pod := range pods {
+		_pods = append(_pods, *pod)
+	}
+	klog.Infof("[DEBUG] GetPodMetrics, pods: %+v", _pods)
+
 	var queryData []metrics.PodMetrics
 	if len(pods) == 0 {
 		return queryData, nil
@@ -370,6 +376,12 @@ func (r *ResourceMetricsProvider) GetPodMetrics(pods ...*metav1.PartialObjectMet
 
 // GetNodeMetrics queries metrics by the internal constructed node
 func (r *ResourceMetricsProvider) GetNodeMetrics(nodes ...*corev1.Node) ([]metrics.NodeMetrics, error) {
+	_nodes := make([]corev1.Node, 0)
+	for _, pod := range nodes {
+		_nodes = append(_nodes, *pod)
+	}
+	klog.Infof("[DEBUG] GetNodeMetrics, nodes: %+v", _nodes)
+
 	var queryData []metrics.NodeMetrics
 	if len(nodes) == 0 {
 		return queryData, nil
