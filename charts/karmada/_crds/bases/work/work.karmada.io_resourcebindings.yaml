@@ -1128,6 +1128,16 @@ spec:
                   - name
                   type: object
                 type: array
+              rescheduleTriggeredAt:
+                description: "RescheduleTriggeredAt is a timestamp representing when
+                  the referenced resource is triggered rescheduling. Only when this
+                  timestamp is later than timestamp in status.rescheduledAt will the
+                  rescheduling actually execute. \n It is represented in RFC3339 form
+                  (like '2006-01-02T15:04:05Z') and is in UTC. It is recommended to
+                  be populated by the REST handler of command.karmada.io/Reschedule
+                  API."
+                format: date-time
+                type: string
               resource:
                 description: Resource represents the Kubernetes resource to be propagated.
                 properties:
@@ -1279,6 +1289,12 @@ spec:
                   - type
                   type: object
                 type: array
+              lastScheduledTime:
+                description: LastScheduledTime is a timestamp representing scheduler
+                  successfully finished a scheduling. It is represented in RFC3339
+                  form (like '2006-01-02T15:04:05Z') and is in UTC.
+                format: date-time
+                type: string
               schedulerObservedGeneration:
                 description: SchedulerObservedGeneration is the generation(.metadata.generation)
                   observed by the scheduler. If SchedulerObservedGeneration is less

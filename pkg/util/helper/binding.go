@@ -473,3 +473,51 @@ func ConstructObjectReference(rs policyv1alpha1.ResourceSelector) workv1alpha2.O
 		Name:       rs.Name,
 	}
 }
+
+func ListPPDerivedRB(ctx context.Context, cli client.Client, policyNamespace, policyName string) (*workv1alpha2.ResourceBindingList, error) {
+	bindings := &workv1alpha2.ResourceBindingList{}
+	listOpt := &client.ListOptions{
+		Namespace: policyNamespace,
+		LabelSelector: labels.SelectorFromSet(labels.Set{
+			policyv1alpha1.PropagationPolicyNamespaceLabel: policyNamespace,
+			policyv1alpha1.PropagationPolicyNameLabel:      policyName,
+		}),
+	}
+	err := cli.List(ctx, bindings, listOpt)
+	if err != nil {
+		klog.Errorf("Failed to list ResourceBinding with policy(%s/%s), error: %v", policyNamespace, policyName, err)
+		return nil, err
+	}
+
+	return bindings, nil
+}
+
+func ListCPPDerivedRB(ctx context.Context, cli client.Client, policyName string) (*workv1alpha2.ResourceBindingList, error) {
+	bindings := &workv1alpha2.ResourceBindingList{}
+	listOpt := &client.ListOptions{
+		LabelSelector: labels.SelectorFromSet(labels.Set{
+			policyv1alpha1.ClusterPropagationPolicyLabel: policyName,
+		})}
+	err := cli.List(ctx, bindings, listOpt)
+	if err != nil {
+		klog.Errorf("Failed to list ResourceBinding with policy(%s), error: %v", policyName, err)
+		return nil, err
+	}
+
+	return bindings, nil
+}
+
+func ListCPPDerivedCRB(ctx context.Context, cli client.Client, policyName string) (*workv1alpha2.ClusterResourceBindingList, error) {
+	bindings := &workv1alpha2.ClusterResourceBindingList{}
+	listOpt := &client.ListOptions{
+		LabelSelector: labels.SelectorFromSet(labels.Set{
+			policyv1alpha1.ClusterPropagationPolicyLabel: policyName,
+		})}
+	err := cli.List(ctx, bindings, listOpt)
+	if err != nil {
+		klog.Errorf("Failed to list ClusterResourceBinding with policy(%s), error: %v", policyName, err)
+		return nil, err
+	}
+
+	return bindings, nil
+}

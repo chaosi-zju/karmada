@@ -28,6 +28,7 @@ import (
 	"github.com/karmada-io/karmada/hack/tools/swagger/lib"
 	autoscalingv1alpha1 "github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1"
 	clusterv1alpha1 "github.com/karmada-io/karmada/pkg/apis/cluster/v1alpha1"
+	commandv1alpha1 "github.com/karmada-io/karmada/pkg/apis/command/v1alpha1"
 	configv1alpha1 "github.com/karmada-io/karmada/pkg/apis/config/v1alpha1"
 	networkingv1alpha1 "github.com/karmada-io/karmada/pkg/apis/networking/v1alpha1"
 	policyv1alpha1 "github.com/karmada-io/karmada/pkg/apis/policy/v1alpha1"
@@ -47,6 +48,10 @@ func main() {
 	mapper.AddSpecific(clusterv1alpha1.SchemeGroupVersion.WithKind(clusterv1alpha1.ResourceKindCluster),
 		clusterv1alpha1.SchemeGroupVersion.WithResource(clusterv1alpha1.ResourcePluralCluster),
 		clusterv1alpha1.SchemeGroupVersion.WithResource(clusterv1alpha1.ResourceSingularCluster), meta.RESTScopeRoot)
+
+	mapper.AddSpecific(commandv1alpha1.SchemeGroupVersion.WithKind(commandv1alpha1.ResourceKindReschedule),
+		commandv1alpha1.SchemeGroupVersion.WithResource(commandv1alpha1.ResourcePluralReschedule),
+		commandv1alpha1.SchemeGroupVersion.WithResource(commandv1alpha1.ResourceSingularReschedule), meta.RESTScopeRoot)
 
 	mapper.AddSpecific(configv1alpha1.SchemeGroupVersion.WithKind(configv1alpha1.ResourceKindResourceInterpreterWebhookConfiguration),
 		configv1alpha1.SchemeGroupVersion.WithResource(configv1alpha1.ResourcePluralResourceInterpreterWebhookConfiguration),
@@ -129,6 +134,7 @@ func main() {
 		},
 		Resources: []lib.ResourceWithNamespaceScoped{
 			{GVR: clusterv1alpha1.SchemeGroupVersion.WithResource(clusterv1alpha1.ResourcePluralCluster), NamespaceScoped: clusterv1alpha1.ResourceNamespaceScopedCluster},
+			{GVR: commandv1alpha1.SchemeGroupVersion.WithResource(commandv1alpha1.ResourcePluralReschedule), NamespaceScoped: commandv1alpha1.ResourceNamespaceScopedReschedule},
 			{GVR: configv1alpha1.SchemeGroupVersion.WithResource(configv1alpha1.ResourcePluralResourceInterpreterWebhookConfiguration), NamespaceScoped: configv1alpha1.ResourceNamespaceScopedResourceInterpreterWebhookConfiguration},
 			{GVR: configv1alpha1.SchemeGroupVersion.WithResource(configv1alpha1.ResourcePluralResourceInterpreterCustomization), NamespaceScoped: configv1alpha1.ResourceNamespaceScopedResourceInterpreterCustomization},
 			{GVR: networkingv1alpha1.SchemeGroupVersion.WithResource(networkingv1alpha1.ResourcePluralMultiClusterIngress), NamespaceScoped: networkingv1alpha1.ResourceNamespaceScopedMultiClusterIngress},

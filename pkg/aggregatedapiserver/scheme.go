@@ -1,5 +1,5 @@
 /*
-Copyright 2022 The Karmada Authors.
+Copyright 2024 The Karmada Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package scheme
+package aggregatedapiserver
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 
 	clusterinstall "github.com/karmada-io/karmada/pkg/apis/cluster/install"
+	commandinstall "github.com/karmada-io/karmada/pkg/apis/command/install"
 )
 
 var (
@@ -37,6 +38,7 @@ var (
 
 func init() {
 	clusterinstall.Install(Scheme)
+	commandinstall.Install(Scheme)
 
 	// we need to add the options to empty v1
 	// TODO fix the server code to avoid this

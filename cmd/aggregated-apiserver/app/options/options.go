@@ -39,13 +39,14 @@ import (
 	netutils "k8s.io/utils/net"
 
 	"github.com/karmada-io/karmada/pkg/aggregatedapiserver"
-	clusterscheme "github.com/karmada-io/karmada/pkg/apis/cluster/scheme"
 	clusterv1alpha1 "github.com/karmada-io/karmada/pkg/apis/cluster/v1alpha1"
+	commandv1alpha1 "github.com/karmada-io/karmada/pkg/apis/command/v1alpha1"
 	pkgfeatures "github.com/karmada-io/karmada/pkg/features"
 	clientset "github.com/karmada-io/karmada/pkg/generated/clientset/versioned"
 	informers "github.com/karmada-io/karmada/pkg/generated/informers/externalversions"
 	generatedopenapi "github.com/karmada-io/karmada/pkg/generated/openapi"
 	"github.com/karmada-io/karmada/pkg/sharedcli/profileflag"
+	"github.com/karmada-io/karmada/pkg/util/gclient"
 	"github.com/karmada-io/karmada/pkg/util/lifted"
 	"github.com/karmada-io/karmada/pkg/version"
 )
@@ -70,7 +71,7 @@ func NewOptions() *Options {
 	o := &Options{
 		RecommendedOptions: genericoptions.NewRecommendedOptions(
 			defaultEtcdPathPrefix,
-			clusterscheme.Codecs.LegacyCodec(clusterv1alpha1.SchemeGroupVersion)),
+			aggregatedapiserver.Codecs.LegacyCodec(clusterv1alpha1.SchemeGroupVersion, commandv1alpha1.SchemeGroupVersion)),
 	}
 	o.RecommendedOptions.Etcd.StorageConfig.EncodeVersioner = runtime.NewMultiGroupVersioner(clusterv1alpha1.SchemeGroupVersion, schema.GroupKind{Group: clusterv1alpha1.GroupName})
 	return o
@@ -106,9 +107,10 @@ func (o *Options) Run(ctx context.Context) error {
 
 	restConfig := config.GenericConfig.ClientConfig
 	restConfig.QPS, restConfig.Burst = o.KubeAPIQPS, o.KubeAPIBurst
+	controlPlaneClient := gclient.NewForConfigOrDie(restConfig)
 	secretLister := config.GenericConfig.SharedInformerFactory.Core().V1().Secrets().Lister()
 
-	server, err := config.Complete().New(restConfig, secretLister)
+	server, err := config.Complete().New(restConfig, controlPlaneClient, secretLister)
 	if err != nil {
 		return err
 	}
@@ -142,11 +144,11 @@ func (o *Options) Config() (*aggregatedapiserver.Config, error) {
 	}
 	o.RecommendedOptions.Features = &genericoptions.FeatureOptions{EnableProfiling: false}
 
-	serverConfig := genericapiserver.NewRecommendedConfig(clusterscheme.Codecs)
+	serverConfig := genericapiserver.NewRecommendedConfig(aggregatedapiserver.Codecs)
 	serverConfig.LongRunningFunc = customLongRunningRequestCheck(sets.NewString("watch", "proxy"),
 		sets.NewString("attach", "exec", "proxy", "log", "portforward"))
-	serverConfig.OpenAPIConfig = genericapiserver.DefaultOpenAPIConfig(generatedopenapi.GetOpenAPIDefinitions, openapi.NewDefinitionNamer(clusterscheme.Scheme))
-	serverConfig.OpenAPIV3Config = genericapiserver.DefaultOpenAPIV3Config(generatedopenapi.GetOpenAPIDefinitions, openapi.NewDefinitionNamer(clusterscheme.Scheme))
+	serverConfig.OpenAPIConfig = genericapiserver.DefaultOpenAPIConfig(generatedopenapi.GetOpenAPIDefinitions, openapi.NewDefinitionNamer(aggregatedapiserver.Scheme))
+	serverConfig.OpenAPIV3Config = genericapiserver.DefaultOpenAPIV3Config(generatedopenapi.GetOpenAPIDefinitions, openapi.NewDefinitionNamer(aggregatedapiserver.Scheme))
 	serverConfig.OpenAPIConfig.Info.Title = "Karmada"
 	if err := o.RecommendedOptions.ApplyTo(serverConfig); err != nil {
 		return nil, err

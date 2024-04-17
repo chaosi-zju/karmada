@@ -57,6 +57,11 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/karmada-io/karmada/pkg/apis/cluster/v1alpha1.ResourceModel":                              schema_pkg_apis_cluster_v1alpha1_ResourceModel(ref),
 		"github.com/karmada-io/karmada/pkg/apis/cluster/v1alpha1.ResourceModelRange":                         schema_pkg_apis_cluster_v1alpha1_ResourceModelRange(ref),
 		"github.com/karmada-io/karmada/pkg/apis/cluster/v1alpha1.ResourceSummary":                            schema_pkg_apis_cluster_v1alpha1_ResourceSummary(ref),
+		"github.com/karmada-io/karmada/pkg/apis/command/v1alpha1.PolicySelector":                             schema_pkg_apis_command_v1alpha1_PolicySelector(ref),
+		"github.com/karmada-io/karmada/pkg/apis/command/v1alpha1.Reschedule":                                 schema_pkg_apis_command_v1alpha1_Reschedule(ref),
+		"github.com/karmada-io/karmada/pkg/apis/command/v1alpha1.RescheduleList":                             schema_pkg_apis_command_v1alpha1_RescheduleList(ref),
+		"github.com/karmada-io/karmada/pkg/apis/command/v1alpha1.RescheduleSpec":                             schema_pkg_apis_command_v1alpha1_RescheduleSpec(ref),
+		"github.com/karmada-io/karmada/pkg/apis/command/v1alpha1.ResourceSelector":                           schema_pkg_apis_command_v1alpha1_ResourceSelector(ref),
 		"github.com/karmada-io/karmada/pkg/apis/config/v1alpha1.CustomizationRules":                          schema_pkg_apis_config_v1alpha1_CustomizationRules(ref),
 		"github.com/karmada-io/karmada/pkg/apis/config/v1alpha1.CustomizationTarget":                         schema_pkg_apis_config_v1alpha1_CustomizationTarget(ref),
 		"github.com/karmada-io/karmada/pkg/apis/config/v1alpha1.DependencyInterpretation":                    schema_pkg_apis_config_v1alpha1_DependencyInterpretation(ref),
@@ -1747,6 +1752,216 @@ func schema_pkg_apis_cluster_v1alpha1_ResourceSummary(ref common.ReferenceCallba
 		},
 		Dependencies: []string{
 			"github.com/karmada-io/karmada/pkg/apis/cluster/v1alpha1.AllocatableModeling", "k8s.io/apimachinery/pkg/api/resource.Quantity"},
+	}
+}
+
+func schema_pkg_apis_command_v1alpha1_PolicySelector(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "PolicySelector the resources bound policy will be selected.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name of the target policy.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"namespace": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Namespace of the target policy. Default is empty, which means it is a cluster propagation policy.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"name"},
+			},
+		},
+	}
+}
+
+func schema_pkg_apis_command_v1alpha1_Reschedule(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "Reschedule represents the desire state and status of a task which can enforces a rescheduling.\n\nNotes: make sure the clocks of aggregated-apiserver and scheduler are synchronized when using this API.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Spec represents the specification of the desired behavior of Reschedule.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("github.com/karmada-io/karmada/pkg/apis/command/v1alpha1.RescheduleSpec"),
+						},
+					},
+				},
+				Required: []string{"spec"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/karmada-io/karmada/pkg/apis/command/v1alpha1.RescheduleSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_command_v1alpha1_RescheduleList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "RescheduleList contains a list of Reschedule",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Items holds a list of Reschedule.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/karmada-io/karmada/pkg/apis/command/v1alpha1.Reschedule"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"items"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/karmada-io/karmada/pkg/apis/command/v1alpha1.Reschedule", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_pkg_apis_command_v1alpha1_RescheduleSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "RescheduleSpec represents the specification of the desired behavior of Reschedule.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"targetRefPolicy": {
+						SchemaProps: spec.SchemaProps{
+							Description: "TargetRefPolicy used to select batch of resources managed by certain policies.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/karmada-io/karmada/pkg/apis/command/v1alpha1.PolicySelector"),
+									},
+								},
+							},
+						},
+					},
+					"targetRefResource": {
+						SchemaProps: spec.SchemaProps{
+							Description: "TargetRefResource used to select resources.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/karmada-io/karmada/pkg/apis/command/v1alpha1.ResourceSelector"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/karmada-io/karmada/pkg/apis/command/v1alpha1.PolicySelector", "github.com/karmada-io/karmada/pkg/apis/command/v1alpha1.ResourceSelector"},
+	}
+}
+
+func schema_pkg_apis_command_v1alpha1_ResourceSelector(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ResourceSelector the resource will be selected.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion represents the API version of the target resource.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind represents the Kind of the target resource.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name of the target resource.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"namespace": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Namespace of the target resource. Default is empty, which means it is a non-namespacescoped resource.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"apiVersion", "kind", "name"},
+			},
+		},
 	}
 }
 
@@ -6748,12 +6963,19 @@ func schema_pkg_apis_work_v1alpha2_ResourceBindingSpec(ref common.ReferenceCallb
 							Format:      "",
 						},
 					},
+					"rescheduleTriggeredAt": {
+						SchemaProps: spec.SchemaProps{
+							Description: "RescheduleTriggeredAt is a timestamp representing when the referenced resource is triggered rescheduling. Only when this timestamp is later than timestamp in status.rescheduledAt will the rescheduling actually execute.\n\nIt is represented in RFC3339 form (like '2006-01-02T15:04:05Z') and is in UTC. It is recommended to be populated by the REST handler of command.karmada.io/Reschedule API.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+						},
+					},
 				},
 				Required: []string{"resource"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/karmada-io/karmada/pkg/apis/policy/v1alpha1.FailoverBehavior", "github.com/karmada-io/karmada/pkg/apis/policy/v1alpha1.Placement", "github.com/karmada-io/karmada/pkg/apis/work/v1alpha2.BindingSnapshot", "github.com/karmada-io/karmada/pkg/apis/work/v1alpha2.GracefulEvictionTask", "github.com/karmada-io/karmada/pkg/apis/work/v1alpha2.ObjectReference", "github.com/karmada-io/karmada/pkg/apis/work/v1alpha2.ReplicaRequirements", "github.com/karmada-io/karmada/pkg/apis/work/v1alpha2.TargetCluster"},
+			"github.com/karmada-io/karmada/pkg/apis/policy/v1alpha1.FailoverBehavior", "github.com/karmada-io/karmada/pkg/apis/policy/v1alpha1.Placement", "github.com/karmada-io/karmada/pkg/apis/work/v1alpha2.BindingSnapshot", "github.com/karmada-io/karmada/pkg/apis/work/v1alpha2.GracefulEvictionTask", "github.com/karmada-io/karmada/pkg/apis/work/v1alpha2.ObjectReference", "github.com/karmada-io/karmada/pkg/apis/work/v1alpha2.ReplicaRequirements", "github.com/karmada-io/karmada/pkg/apis/work/v1alpha2.TargetCluster", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }
 
@@ -6776,6 +6998,13 @@ func schema_pkg_apis_work_v1alpha2_ResourceBindingStatus(ref common.ReferenceCal
 							Description: "SchedulerObservedAffinityName is the name of affinity term that is the basis of current scheduling.",
 							Type:        []string{"string"},
 							Format:      "",
+						},
+					},
+					"lastScheduledTime": {
+						SchemaProps: spec.SchemaProps{
+							Description: "LastScheduledTime is a timestamp representing scheduler successfully finished a scheduling. It is represented in RFC3339 form (like '2006-01-02T15:04:05Z') and is in UTC.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
 					"conditions": {
@@ -6810,7 +7039,7 @@ func schema_pkg_apis_work_v1alpha2_ResourceBindingStatus(ref common.ReferenceCal
 			},
 		},
 		Dependencies: []string{
-			"github.com/karmada-io/karmada/pkg/apis/work/v1alpha2.AggregatedStatusItem", "k8s.io/apimachinery/pkg/apis/meta/v1.Condition"},
+			"github.com/karmada-io/karmada/pkg/apis/work/v1alpha2.AggregatedStatusItem", "k8s.io/apimachinery/pkg/apis/meta/v1.Condition", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }
 

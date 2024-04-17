@@ -24,6 +24,8 @@ import (
 	fakeautoscalingv1alpha1 "github.com/karmada-io/karmada/pkg/generated/clientset/versioned/typed/autoscaling/v1alpha1/fake"
 	clusterv1alpha1 "github.com/karmada-io/karmada/pkg/generated/clientset/versioned/typed/cluster/v1alpha1"
 	fakeclusterv1alpha1 "github.com/karmada-io/karmada/pkg/generated/clientset/versioned/typed/cluster/v1alpha1/fake"
+	commandv1alpha1 "github.com/karmada-io/karmada/pkg/generated/clientset/versioned/typed/command/v1alpha1"
+	fakecommandv1alpha1 "github.com/karmada-io/karmada/pkg/generated/clientset/versioned/typed/command/v1alpha1/fake"
 	configv1alpha1 "github.com/karmada-io/karmada/pkg/generated/clientset/versioned/typed/config/v1alpha1"
 	fakeconfigv1alpha1 "github.com/karmada-io/karmada/pkg/generated/clientset/versioned/typed/config/v1alpha1/fake"
 	networkingv1alpha1 "github.com/karmada-io/karmada/pkg/generated/clientset/versioned/typed/networking/v1alpha1"
@@ -103,6 +105,11 @@ func (c *Clientset) AutoscalingV1alpha1() autoscalingv1alpha1.AutoscalingV1alpha
 // ClusterV1alpha1 retrieves the ClusterV1alpha1Client
 func (c *Clientset) ClusterV1alpha1() clusterv1alpha1.ClusterV1alpha1Interface {
 	return &fakeclusterv1alpha1.FakeClusterV1alpha1{Fake: &c.Fake}
+}
+
+// CommandV1alpha1 retrieves the CommandV1alpha1Client
+func (c *Clientset) CommandV1alpha1() commandv1alpha1.CommandV1alpha1Interface {
+	return &fakecommandv1alpha1.FakeCommandV1alpha1{Fake: &c.Fake}
 }
 
 // ConfigV1alpha1 retrieves the ConfigV1alpha1Client

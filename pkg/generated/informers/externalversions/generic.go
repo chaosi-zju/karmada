@@ -23,6 +23,7 @@ import (
 
 	v1alpha1 "github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1"
 	clusterv1alpha1 "github.com/karmada-io/karmada/pkg/apis/cluster/v1alpha1"
+	commandv1alpha1 "github.com/karmada-io/karmada/pkg/apis/command/v1alpha1"
 	configv1alpha1 "github.com/karmada-io/karmada/pkg/apis/config/v1alpha1"
 	networkingv1alpha1 "github.com/karmada-io/karmada/pkg/apis/networking/v1alpha1"
 	policyv1alpha1 "github.com/karmada-io/karmada/pkg/apis/policy/v1alpha1"
@@ -69,6 +70,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		// Group=cluster.karmada.io, Version=v1alpha1
 	case clusterv1alpha1.SchemeGroupVersion.WithResource("clusters"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Cluster().V1alpha1().Clusters().Informer()}, nil
+
+		// Group=command.karmada.io, Version=v1alpha1
+	case commandv1alpha1.SchemeGroupVersion.WithResource("reschedules"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Command().V1alpha1().Reschedules().Informer()}, nil
 
 		// Group=config.karmada.io, Version=v1alpha1
 	case configv1alpha1.SchemeGroupVersion.WithResource("resourceinterpretercustomizations"):

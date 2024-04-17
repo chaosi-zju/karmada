@@ -1255,7 +1255,7 @@ func (d *ResourceDetector) HandlePropagationPolicyCreationOrUpdate(policy *polic
 	// When updating fields other than ResourceSelector, should first find the corresponding ResourceBinding
 	// and add the bound object to the processor's queue for reconciliation to make sure that
 	// PropagationPolicy's updates can be synchronized to ResourceBinding.
-	resourceBindings, err := d.listPPDerivedRB(policy.Namespace, policy.Name)
+	resourceBindings, err := helper.ListPPDerivedRB(context.TODO(), d.Client, policy.Namespace, policy.Name)
 	if err != nil {
 		return err
 	}
@@ -1317,11 +1317,11 @@ func (d *ResourceDetector) HandleClusterPropagationPolicyCreationOrUpdate(policy
 	// When updating fields other than ResourceSelector, should first find the corresponding ResourceBinding/ClusterResourceBinding
 	// and add the bound object to the processor's queue for reconciliation to make sure that
 	// ClusterPropagationPolicy's updates can be synchronized to ResourceBinding/ClusterResourceBinding.
-	resourceBindings, err := d.listCPPDerivedRB(policy.Name)
+	resourceBindings, err := helper.ListCPPDerivedRB(context.TODO(), d.Client, policy.Name)
 	if err != nil {
 		return err
 	}
-	clusterResourceBindings, err := d.listCPPDerivedCRB(policy.Name)
+	clusterResourceBindings, err := helper.ListCPPDerivedCRB(context.TODO(), d.Client, policy.Name)
 	if err != nil {
 		return err
 	}

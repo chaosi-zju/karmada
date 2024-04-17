@@ -27,6 +27,7 @@ import (
 
 	autoscalingv1alpha1 "github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1"
 	clusterv1alpha1 "github.com/karmada-io/karmada/pkg/apis/cluster/v1alpha1"
+	commandv1alpha1 "github.com/karmada-io/karmada/pkg/apis/command/v1alpha1"
 	configv1alpha1 "github.com/karmada-io/karmada/pkg/apis/config/v1alpha1"
 	networkingv1alpha1 "github.com/karmada-io/karmada/pkg/apis/networking/v1alpha1"
 	policyv1alpha1 "github.com/karmada-io/karmada/pkg/apis/policy/v1alpha1"
@@ -42,6 +43,7 @@ var aggregatedScheme = runtime.NewScheme()
 func init() {
 	utilruntime.Must(scheme.AddToScheme(aggregatedScheme))              // add Kubernetes schemes
 	utilruntime.Must(clusterv1alpha1.AddToScheme(aggregatedScheme))     // add cluster schemes
+	utilruntime.Must(commandv1alpha1.AddToScheme(aggregatedScheme))     // add task schemes
 	utilruntime.Must(configv1alpha1.AddToScheme(aggregatedScheme))      // add config v1alpha1 schemes
 	utilruntime.Must(networkingv1alpha1.AddToScheme(aggregatedScheme))  // add network v1alpha1 schemes
 	utilruntime.Must(policyv1alpha1.AddToScheme(aggregatedScheme))      // add propagation schemes

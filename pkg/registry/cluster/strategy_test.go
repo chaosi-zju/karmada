@@ -33,9 +33,10 @@ import (
 
 	clusterapis "github.com/karmada-io/karmada/pkg/apis/cluster"
 	"github.com/karmada-io/karmada/pkg/apis/cluster/mutation"
-	clusterscheme "github.com/karmada-io/karmada/pkg/apis/cluster/scheme"
 	"github.com/karmada-io/karmada/pkg/features"
 )
+
+var testScheme = runtime.NewScheme()
 
 func getValidCluster(name string) *clusterapis.Cluster {
 	return &clusterapis.Cluster{
@@ -71,14 +72,14 @@ func setFeatureGateDuringTest(tb testing.TB, gate featuregate.FeatureGate, f fea
 }
 
 func TestStrategy_NamespaceScoped(t *testing.T) {
-	clusterStrategy := NewStrategy(clusterscheme.Scheme)
+	clusterStrategy := NewStrategy(testScheme)
 	if clusterStrategy.NamespaceScoped() {
 		t.Errorf("Cluster must be cluster scoped")
 	}
 }
 
 func TestStrategy_PrepareForCreate(t *testing.T) {
-	clusterStrategy := NewStrategy(clusterscheme.Scheme)
+	clusterStrategy := NewStrategy(testScheme)
 	ctx := request.NewContext()
 
 	defaultResourceModelCluster := getValidClusterWithGeneration("m1", 1)
@@ -171,7 +172,7 @@ func TestStrategy_PrepareForCreate(t *testing.T) {
 }
 
 func TestStrategy_PrepareForUpdate(t *testing.T) {
-	clusterStrategy := NewStrategy(clusterscheme.Scheme)
+	clusterStrategy := NewStrategy(testScheme)
 	ctx := request.NewContext()
 
 	standardResourceModelClusterBefore := getValidClusterWithGeneration("m2", 2)
@@ -287,7 +288,7 @@ func TestStrategy_PrepareForUpdate(t *testing.T) {
 }
 
 func TestStrategy_Validate(t *testing.T) {
-	clusterStrategy := NewStrategy(clusterscheme.Scheme)
+	clusterStrategy := NewStrategy(testScheme)
 	ctx := request.NewContext()
 	cluster := getValidCluster("cluster")
 
@@ -298,7 +299,7 @@ func TestStrategy_Validate(t *testing.T) {
 }
 
 func TestStrategy_WarningsOnCreate(t *testing.T) {
-	clusterStrategy := NewStrategy(clusterscheme.Scheme)
+	clusterStrategy := NewStrategy(testScheme)
 	ctx := request.NewContext()
 	cluster := getValidCluster("cluster")
 
@@ -309,21 +310,21 @@ func TestStrategy_WarningsOnCreate(t *testing.T) {
 }
 
 func TestStrategy_AllowCreateOnUpdate(t *testing.T) {
-	clusterStrategy := NewStrategy(clusterscheme.Scheme)
+	clusterStrategy := NewStrategy(testScheme)
 	if clusterStrategy.AllowCreateOnUpdate() {
 		t.Errorf("Cluster do not allow create on update")
 	}
 }
 
 func TestStrategy_AllowUnconditionalUpdate(t *testing.T) {
-	clusterStrategy := NewStrategy(clusterscheme.Scheme)
+	clusterStrategy := NewStrategy(testScheme)
 	if !clusterStrategy.AllowUnconditionalUpdate() {
 		t.Errorf("Cluster can be updated unconditionally on update")
 	}
 }
 
 func TestStrategy_Canonicalize(t *testing.T) {
-	clusterStrategy := NewStrategy(clusterscheme.Scheme)
+	clusterStrategy := NewStrategy(testScheme)
 	cluster := getValidCluster("cluster")
 	cluster.Spec.Taints = []corev1.Taint{
 		{
@@ -352,7 +353,7 @@ func TestStrategy_Canonicalize(t *testing.T) {
 }
 
 func TestStrategy_ValidateUpdate(t *testing.T) {
-	clusterStrategy := NewStrategy(clusterscheme.Scheme)
+	clusterStrategy := NewStrategy(testScheme)
 	ctx := request.NewContext()
 	clusterOld := getValidCluster("cluster")
 	clusterOld.ResourceVersion = "abc"
@@ -366,7 +367,7 @@ func TestStrategy_ValidateUpdate(t *testing.T) {
 }
 
 func TestStrategy_WarningsOnUpdate(t *testing.T) {
-	clusterStrategy := NewStrategy(clusterscheme.Scheme)
+	clusterStrategy := NewStrategy(testScheme)
 	ctx := request.NewContext()
 	cluster := getValidCluster("cluster")
 

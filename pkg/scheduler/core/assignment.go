@@ -65,28 +65,34 @@ type assignState struct {
 
 	// targetReplicas is the replicas that we need to schedule in this round
 	targetReplicas int32
+
+	// rescheduleSpecified when spec.rescheduleTriggeredAt later than status.lastScheduledTime in binding, means
+	// there is a rescheduling explicitly specified by user, and scheduler should do a purely rescale.
+	rescheduleSpecified bool
 }
 
-func newAssignState(candidates []*clusterv1alpha1.Cluster, placement *policyv1alpha1.Placement, obj *workv1alpha2.ResourceBindingSpec) *assignState {
+func newAssignState(candidates []*clusterv1alpha1.Cluster, spec *workv1alpha2.ResourceBindingSpec,
+	status *workv1alpha2.ResourceBindingStatus) *assignState {
 	var strategyType string
 
-	switch placement.ReplicaSchedulingType() {
+	switch spec.Placement.ReplicaSchedulingType() {
 	case policyv1alpha1.ReplicaSchedulingTypeDuplicated:
 		strategyType = DuplicatedStrategy
 	case policyv1alpha1.ReplicaSchedulingTypeDivided:
-		switch placement.ReplicaScheduling.ReplicaDivisionPreference {
+		switch spec.Placement.ReplicaScheduling.ReplicaDivisionPreference {
 		case policyv1alpha1.ReplicaDivisionPreferenceAggregated:
 			strategyType = AggregatedStrategy
 		case policyv1alpha1.ReplicaDivisionPreferenceWeighted:
-			if placement.ReplicaScheduling.WeightPreference != nil && len(placement.ReplicaScheduling.WeightPreference.DynamicWeight) != 0 {
+			if spec.Placement.ReplicaScheduling.WeightPreference != nil && len(spec.Placement.ReplicaScheduling.WeightPreference.DynamicWeight) != 0 {
 				strategyType = DynamicWeightStrategy
 			} else {
 				strategyType = StaticWeightStrategy
 			}
 		}
 	}
+	rescheduleSpecified := spec.RescheduleTriggeredAt.After(status.LastScheduledTime.Time)
 
-	return &assignState{candidates: candidates, strategy: placement.ReplicaScheduling, spec: obj, strategyType: strategyType}
+	return &assignState{candidates: candidates, strategy: spec.Placement.ReplicaScheduling, spec: spec, strategyType: strategyType, rescheduleSpecified: rescheduleSpecified}
 }
 
 func (as *assignState) buildScheduledClusters() {
@@ -192,6 +198,13 @@ func assignByDynamicStrategy(state *assignState) ([]workv1alpha2.TargetCluster, 
 		result, err := dynamicScaleUp(state)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scale up: %v", err)
+		}
+		return result, nil
+	} else if state.rescheduleSpecified {
+		// when a rescheduling is explicitly specified by user, the scheduler should do a purely rescale.
+		result, err := dynamicReScale(state)
+		if err != nil {
+			return nil, fmt.Errorf("failed to do rescale: %v", err)
 		}
 		return result, nil
 	}

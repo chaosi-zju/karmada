@@ -26,6 +26,7 @@ import (
 
 	autoscalingv1alpha1 "github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1"
 	clusterv1alpha1 "github.com/karmada-io/karmada/pkg/apis/cluster/v1alpha1"
+	commandv1alpha1 "github.com/karmada-io/karmada/pkg/apis/command/v1alpha1"
 	configv1alpha1 "github.com/karmada-io/karmada/pkg/apis/config/v1alpha1"
 	networkingv1alpha1 "github.com/karmada-io/karmada/pkg/apis/networking/v1alpha1"
 	policyv1alpha1 "github.com/karmada-io/karmada/pkg/apis/policy/v1alpha1"
@@ -58,6 +59,7 @@ func NewSkippedResourceConfig() *SkippedResourceConfig {
 	}
 	// disable karmada group by default
 	r.DisableGroup(clusterv1alpha1.GroupVersion.Group)
+	r.DisableGroup(commandv1alpha1.GroupVersion.Group)
 	r.DisableGroup(policyv1alpha1.GroupVersion.Group)
 	r.DisableGroup(workv1alpha1.GroupVersion.Group)
 	r.DisableGroup(configv1alpha1.GroupVersion.Group)

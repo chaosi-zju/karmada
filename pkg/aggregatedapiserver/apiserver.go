@@ -23,10 +23,12 @@ import (
 	listcorev1 "k8s.io/client-go/listers/core/v1"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	clusterapis "github.com/karmada-io/karmada/pkg/apis/cluster"
-	clusterscheme "github.com/karmada-io/karmada/pkg/apis/cluster/scheme"
+	commandapis "github.com/karmada-io/karmada/pkg/apis/command"
 	clusterstorage "github.com/karmada-io/karmada/pkg/registry/cluster/storage"
+	"github.com/karmada-io/karmada/pkg/registry/command"
 )
 
 // ExtraConfig holds custom apiserver config
@@ -70,7 +72,7 @@ func (cfg *Config) Complete() CompletedConfig {
 	return CompletedConfig{&c}
 }
 
-func (c completedConfig) New(restConfig *restclient.Config, secretLister listcorev1.SecretLister) (*APIServer, error) {
+func (c completedConfig) New(restConfig *restclient.Config, controlPlaneClient client.Client, secretLister listcorev1.SecretLister) (*APIServer, error) {
 	genericServer, err := c.GenericConfig.New("aggregated-apiserver", genericapiserver.NewEmptyDelegate())
 	if err != nil {
 		return nil, err
@@ -80,9 +82,9 @@ func (c completedConfig) New(restConfig *restclient.Config, secretLister listcor
 		GenericAPIServer: genericServer,
 	}
 
-	apiGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(clusterapis.GroupName, clusterscheme.Scheme, clusterscheme.ParameterCodec, clusterscheme.Codecs)
-
-	clusterStorage, err := clusterstorage.NewStorage(clusterscheme.Scheme, restConfig, secretLister, c.GenericConfig.RESTOptionsGetter)
+	// group info for cluster.karmada.io
+	clusterGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(clusterapis.GroupName, Scheme, ParameterCodec, Codecs)
+	clusterStorage, err := clusterstorage.NewStorage(Scheme, restConfig, secretLister, c.GenericConfig.RESTOptionsGetter)
 	if err != nil {
 		klog.Errorf("Unable to create REST storage for a resource due to %v, will die", err)
 		return nil, err
@@ -91,9 +93,15 @@ func (c completedConfig) New(restConfig *restclient.Config, secretLister listcor
 	v1alpha1cluster["clusters"] = clusterStorage.Cluster
 	v1alpha1cluster["clusters/status"] = clusterStorage.Status
 	v1alpha1cluster["clusters/proxy"] = clusterStorage.Proxy
-	apiGroupInfo.VersionedResourcesStorageMap["v1alpha1"] = v1alpha1cluster
+	clusterGroupInfo.VersionedResourcesStorageMap["v1alpha1"] = v1alpha1cluster
 
-	if err = server.GenericAPIServer.InstallAPIGroup(&apiGroupInfo); err != nil {
+	// group info for command.karmada.io
+	commandGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(commandapis.GroupName, Scheme, ParameterCodec, Codecs)
+	v1alpha1command := map[string]rest.Storage{}
+	v1alpha1command[commandapis.ResourcePluralReschedule] = command.GetRescheduleHandler(controlPlaneClient)
+	commandGroupInfo.VersionedResourcesStorageMap["v1alpha1"] = v1alpha1command
+
+	if err = server.GenericAPIServer.InstallAPIGroups(&clusterGroupInfo, &commandGroupInfo); err != nil {
 		return nil, err
 	}
 

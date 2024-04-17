@@ -24,6 +24,7 @@ import (
 
 	autoscalingv1alpha1 "github.com/karmada-io/karmada/pkg/generated/clientset/versioned/typed/autoscaling/v1alpha1"
 	clusterv1alpha1 "github.com/karmada-io/karmada/pkg/generated/clientset/versioned/typed/cluster/v1alpha1"
+	commandv1alpha1 "github.com/karmada-io/karmada/pkg/generated/clientset/versioned/typed/command/v1alpha1"
 	configv1alpha1 "github.com/karmada-io/karmada/pkg/generated/clientset/versioned/typed/config/v1alpha1"
 	networkingv1alpha1 "github.com/karmada-io/karmada/pkg/generated/clientset/versioned/typed/networking/v1alpha1"
 	policyv1alpha1 "github.com/karmada-io/karmada/pkg/generated/clientset/versioned/typed/policy/v1alpha1"
@@ -40,6 +41,7 @@ type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	AutoscalingV1alpha1() autoscalingv1alpha1.AutoscalingV1alpha1Interface
 	ClusterV1alpha1() clusterv1alpha1.ClusterV1alpha1Interface
+	CommandV1alpha1() commandv1alpha1.CommandV1alpha1Interface
 	ConfigV1alpha1() configv1alpha1.ConfigV1alpha1Interface
 	NetworkingV1alpha1() networkingv1alpha1.NetworkingV1alpha1Interface
 	PolicyV1alpha1() policyv1alpha1.PolicyV1alpha1Interface
@@ -54,6 +56,7 @@ type Clientset struct {
 	*discovery.DiscoveryClient
 	autoscalingV1alpha1 *autoscalingv1alpha1.AutoscalingV1alpha1Client
 	clusterV1alpha1     *clusterv1alpha1.ClusterV1alpha1Client
+	commandV1alpha1     *commandv1alpha1.CommandV1alpha1Client
 	configV1alpha1      *configv1alpha1.ConfigV1alpha1Client
 	networkingV1alpha1  *networkingv1alpha1.NetworkingV1alpha1Client
 	policyV1alpha1      *policyv1alpha1.PolicyV1alpha1Client
@@ -71,6 +74,11 @@ func (c *Clientset) AutoscalingV1alpha1() autoscalingv1alpha1.AutoscalingV1alpha
 // ClusterV1alpha1 retrieves the ClusterV1alpha1Client
 func (c *Clientset) ClusterV1alpha1() clusterv1alpha1.ClusterV1alpha1Interface {
 	return c.clusterV1alpha1
+}
+
+// CommandV1alpha1 retrieves the CommandV1alpha1Client
+func (c *Clientset) CommandV1alpha1() commandv1alpha1.CommandV1alpha1Interface {
+	return c.commandV1alpha1
 }
 
 // ConfigV1alpha1 retrieves the ConfigV1alpha1Client
@@ -160,6 +168,10 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 	if err != nil {
 		return nil, err
 	}
+	cs.commandV1alpha1, err = commandv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	if err != nil {
+		return nil, err
+	}
 	cs.configV1alpha1, err = configv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
@@ -211,6 +223,7 @@ func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.autoscalingV1alpha1 = autoscalingv1alpha1.New(c)
 	cs.clusterV1alpha1 = clusterv1alpha1.New(c)
+	cs.commandV1alpha1 = commandv1alpha1.New(c)
 	cs.configV1alpha1 = configv1alpha1.New(c)
 	cs.networkingV1alpha1 = networkingv1alpha1.New(c)
 	cs.policyV1alpha1 = policyv1alpha1.New(c)
