@@ -136,6 +136,14 @@ type ResourceBindingSpec struct {
 	// +kubebuilder:validation:Enum=Abort;Overwrite
 	// +optional
 	ConflictResolution policyv1alpha1.ConflictResolution `json:"conflictResolution,omitempty"`
+
+	// RescheduleTriggeredAt is a timestamp representing when the referenced resource is triggered rescheduling.
+	// Only when this timestamp is later than timestamp in status.rescheduledAt will the rescheduling actually execute.
+	//
+	// It is represented in RFC3339 form (like '2006-01-02T15:04:05Z') and is in UTC.
+	// It is recommended to be populated by the REST handler of command.karmada.io/Reschedule API.
+	// +optional
+	RescheduleTriggeredAt metav1.Time `json:"rescheduleTriggeredAt,omitempty"`
 }
 
 // ObjectReference contains enough information to locate the referenced object inside current cluster.
@@ -296,6 +304,11 @@ type ResourceBindingStatus struct {
 	// the basis of current scheduling.
 	// +optional
 	SchedulerObservedAffinityName string `json:"schedulerObservingAffinityName,omitempty"`
+
+	// LastScheduledTime is a timestamp representing scheduler successfully finished a scheduling.
+	// It is represented in RFC3339 form (like '2006-01-02T15:04:05Z') and is in UTC.
+	// +optional
+	LastScheduledTime metav1.Time `json:"lastScheduledTime,omitempty"`
 
 	// Conditions contain the different condition statuses.
 	// +optional

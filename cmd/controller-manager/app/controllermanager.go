@@ -67,6 +67,7 @@ import (
 	"github.com/karmada-io/karmada/pkg/controllers/multiclusterservice"
 	"github.com/karmada-io/karmada/pkg/controllers/namespace"
 	"github.com/karmada-io/karmada/pkg/controllers/remediation"
+	"github.com/karmada-io/karmada/pkg/controllers/scheduletrigger"
 	"github.com/karmada-io/karmada/pkg/controllers/status"
 	"github.com/karmada-io/karmada/pkg/controllers/unifiedauth"
 	"github.com/karmada-io/karmada/pkg/dependenciesdistributor"
@@ -232,6 +233,7 @@ func init() {
 	controllers["endpointsliceCollect"] = startEndpointSliceCollectController
 	controllers["endpointsliceDispatch"] = startEndpointSliceDispatchController
 	controllers["remedy"] = startRemedyController
+	controllers["scheduleTrigger"] = startScheduleTriggerController
 }
 
 func startClusterController(ctx controllerscontext.Context) (enabled bool, err error) {
@@ -704,6 +706,18 @@ func startRemedyController(ctx controllerscontext.Context) (enabled bool, err er
 	if err = c.SetupWithManager(ctx.Mgr); err != nil {
 		return false, err
 	}
+	return true, nil
+}
+
+func startScheduleTriggerController(ctx controllerscontext.Context) (enabled bool, err error) {
+	scheduleTrigger := scheduletrigger.ScheduleTrigger{
+		Client: ctx.Mgr.GetClient(),
+	}
+	err = scheduleTrigger.SetupWithManager(ctx.Mgr)
+	if err != nil {
+		return false, err
+	}
+
 	return true, nil
 }
 

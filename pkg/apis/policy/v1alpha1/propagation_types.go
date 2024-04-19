@@ -585,3 +585,118 @@ type ClusterPropagationPolicyList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []ClusterPropagationPolicy `json:"items"`
 }
+
+// +genclient
+// +genclient:nonNamespaced
+// +kubebuilder:resource:path=scheduletriggers,scope="Cluster",categories={karmada-io}
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// ScheduleTrigger represents the desired behavior and status of a job which can enforces a rescheduling.
+//
+// Notes: make sure the clocks of controller-manager and scheduler are synchronized when using this API.
+type ScheduleTrigger struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	// Spec represents the specification of the desired behavior of ScheduleTrigger.
+	// +required
+	Spec ScheduleTriggerSpec `json:"spec"`
+
+	// Status represents the status of ScheduleTrigger.
+	// +optional
+	Status ScheduleTriggerStatus `json:"status,omitempty"`
+}
+
+// ScheduleTriggerSpec represents the specification of the desired behavior of Reschedule.
+type ScheduleTriggerSpec struct {
+	// TargetRefPolicy used to select batch of resources managed by certain policies.
+	// +optional
+	TargetRefPolicy []TargetRefPolicy `json:"targetRefPolicy,omitempty"`
+
+	// TargetRefResource used to select resources.
+	// +optional
+	TargetRefResource []TargetRefResource `json:"targetRefResource,omitempty"`
+
+	// AutoCleanAfterMinutes specified the time in minutes when to clean up current ScheduleTrigger.
+	// When time up, the current object will be deleted, no matter whether executed success.
+	// Defaults to value 60, and value 0 means never do auto clean.
+	// +kubebuilder:default=60
+	// +optional
+	AutoCleanAfterMinutes int `json:"autoCleanAfterMinutes,omitempty"`
+}
+
+// TargetRefPolicy the resources bound policy will be selected.
+type TargetRefPolicy struct {
+	// Name of the target policy.
+	// +required
+	Name string `json:"name"`
+
+	// Namespace of the target policy.
+	// Default is empty, which means it is a cluster propagation policy.
+	// +optional
+	Namespace string `json:"namespace,omitempty"`
+}
+
+// TargetRefResource the resource will be selected.
+type TargetRefResource struct {
+	// APIVersion represents the API version of the target resource.
+	// +required
+	APIVersion string `json:"apiVersion"`
+
+	// Kind represents the Kind of the target resource.
+	// +required
+	Kind string `json:"kind"`
+
+	// Name of the target resource.
+	// +required
+	Name string `json:"name"`
+
+	// Namespace of the target resource.
+	// Default is empty, which means it is a non-namespacescoped resource.
+	// +optional
+	Namespace string `json:"namespace,omitempty"`
+}
+
+// ScheduleTriggerStatus contains information about the current status of a ScheduleTrigger
+// updated periodically by schedule trigger controller.
+type ScheduleTriggerStatus struct {
+	// Phase represents the specific extent to which the task has been executed.
+	// Valid options are "Pending", "Running", "Failed" and "Success", Defaults to "Pending".
+	// +kubebuilder:default=Pending
+	// +optional
+	Phase TriggerPhase `json:"phase,omitempty"`
+
+	// FailedResourceList the list of trigger failed resources.
+	// +optional
+	FailedPolicyList []TargetRefPolicy `json:"failedPolicyList,omitempty"`
+
+	// FailedResourceList the list of trigger failed resources.
+	// +optional
+	FailedResourceList []TargetRefResource `json:"failedResourceList,omitempty"`
+}
+
+// TriggerPhase the specific extent to which the task has been executed
+type TriggerPhase string
+
+const (
+	// TriggerPending the schedule trigger hasn't been processed.
+	TriggerPending TriggerPhase = "Pending"
+	// TriggerRunning the schedule trigger is on going, and hasn't finished its process.
+	TriggerRunning TriggerPhase = "Running"
+	// TriggerFailed some or all selected resource has been triggered a scheduling failed.
+	TriggerFailed TriggerPhase = "Failed"
+	// TriggerSuccess all selected resource has been triggered a scheduling success.
+	TriggerSuccess TriggerPhase = "Success"
+)
+
+// +kubebuilder:resource:scope="Cluster"
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// ScheduleTriggerList contains a list of ScheduleTrigger
+type ScheduleTriggerList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+
+	// Items holds a list of ScheduleTrigger.
+	Items []ScheduleTrigger `json:"items"`
+}
