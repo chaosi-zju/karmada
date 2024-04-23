@@ -19,9 +19,11 @@ package workloadrebalancer
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/util/retry"
 	"k8s.io/klog/v2"
 	controllerruntime "sigs.k8s.io/controller-runtime"
@@ -58,8 +60,10 @@ func (c *RebalancerController) SetupWithManager(mgr controllerruntime.Manager) e
 			return true
 		},
 		UpdateFunc: func(e event.UpdateEvent) bool {
-			c.ttlAfterFinishedWorker.Add(e.ObjectNew)
-			return true
+			oldObj := e.ObjectOld.(*appsv1alpha1.WorkloadRebalancer)
+			newObj := e.ObjectNew.(*appsv1alpha1.WorkloadRebalancer)
+			c.ttlAfterFinishedWorker.Add(newObj)
+			return !reflect.DeepEqual(oldObj.Spec, newObj.Spec)
 		},
 		DeleteFunc:  func(event.DeleteEvent) bool { return false },
 		GenericFunc: func(event.GenericEvent) bool { return false },
@@ -112,21 +116,54 @@ func (c *RebalancerController) Reconcile(ctx context.Context, req controllerrunt
 }
 
 func (c *RebalancerController) buildWorkloadRebalancerStatus(rebalancer *appsv1alpha1.WorkloadRebalancer) appsv1alpha1.WorkloadRebalancerStatus {
-	resourceList := make([]appsv1alpha1.ObservedWorkload, 0)
+	observedWorkloads := make([]appsv1alpha1.ObservedWorkload, 0)
 	for _, resource := range rebalancer.Spec.Workloads {
-		resourceList = append(resourceList, appsv1alpha1.ObservedWorkload{
+		observedWorkloads = append(observedWorkloads, appsv1alpha1.ObservedWorkload{
 			Workload: resource,
 		})
 	}
-	return appsv1alpha1.WorkloadRebalancerStatus{
-		ObservedWorkloads: resourceList,
+	return appsv1alpha1.WorkloadRebalancerStatus{ObservedWorkloads: observedWorkloads}
+}
+
+// When spec filed of WorkloadRebalancer updated, we shall refresh the workload list in status.observedWorkloads:
+//  1. a new workload added to spec list, just add it into status list too and do the rebalance.
+//  2. a workload deleted from previous spec list, keep it in status list if already success, and remove it if not.
+//  3. a workload is modified, just regard it as deleted an old one and inserted a new one.
+//  4. just list order is disrupted, no additional action.
+func (c *RebalancerController) syncWorkloadsFromSpecToStatus(rebalancer *appsv1alpha1.WorkloadRebalancer) appsv1alpha1.WorkloadRebalancerStatus {
+	observedWorkloads := make([]appsv1alpha1.ObservedWorkload, 0)
+
+	specWorkloads := sets.New[appsv1alpha1.ObjectReference]()
+	for _, workload := range rebalancer.Spec.Workloads {
+		specWorkloads.Insert(workload)
 	}
+
+	for _, item := range rebalancer.Status.ObservedWorkloads {
+		// if item still exist in `spec`, keep it in `status` and remove it from `specWorkloads` set.
+		// if item no longer exist in `spec`, keep it in `status` if it already success, otherwise remove it from `status`.
+		if specWorkloads.Has(item.Workload) {
+			observedWorkloads = append(observedWorkloads, item)
+			specWorkloads.Delete(item.Workload)
+		} else if item.Result == appsv1alpha1.RebalanceSuccessful {
+			observedWorkloads = append(observedWorkloads, item)
+		}
+	}
+
+	// since item exist in both `spec` and `status` has been removed, the left means the newly added workload,
+	// add them into `status`.
+	for workload := range specWorkloads {
+		observedWorkloads = append(observedWorkloads, appsv1alpha1.ObservedWorkload{Workload: workload})
+	}
+
+	return appsv1alpha1.WorkloadRebalancerStatus{ObservedWorkloads: observedWorkloads}
 }
 
 func (c *RebalancerController) doWorkloadRebalance(ctx context.Context, rebalancer *appsv1alpha1.WorkloadRebalancer) (successNum int64, retryNum int64) {
 	// get previous status and update basing on it
 	if len(rebalancer.Status.ObservedWorkloads) == 0 {
 		rebalancer.Status = c.buildWorkloadRebalancerStatus(rebalancer)
+	} else {
+		rebalancer.Status = c.syncWorkloadsFromSpecToStatus(rebalancer)
 	}
 
 	successNum, retryNum = int64(0), int64(0)
