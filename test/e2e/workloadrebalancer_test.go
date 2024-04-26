@@ -298,8 +298,12 @@ var _ = ginkgo.Describe("workload rebalancer testing", func() {
 })
 
 func bindingHasRescheduled(spec workv1alpha2.ResourceBindingSpec, status workv1alpha2.ResourceBindingStatus, rebalancerCreationTime metav1.Time) bool {
+	if spec.RescheduleTriggeredAt == nil {
+		klog.Infof("rescheduleTriggeredAt of bindingis is unset")
+		return false
+	}
 	if *spec.RescheduleTriggeredAt != rebalancerCreationTime || status.LastScheduledTime.Before(spec.RescheduleTriggeredAt) {
-		klog.Errorf("rebalancerCreationTime: %+v, rescheduleTriggeredAt / lastScheduledTime: %+v / %+v",
+		klog.Infof("rebalancerCreationTime: %+v, rescheduleTriggeredAt / lastScheduledTime: %+v / %+v",
 			rebalancerCreationTime, *spec.RescheduleTriggeredAt, status.LastScheduledTime)
 		return false
 	}
