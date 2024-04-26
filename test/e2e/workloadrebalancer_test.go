@@ -17,6 +17,7 @@ limitations under the License.
 package e2e
 
 import (
+	"encoding/json"
 	"sort"
 
 	"github.com/onsi/ginkgo/v2"
@@ -104,13 +105,22 @@ var _ = ginkgo.Describe("workload rebalancer testing", func() {
 	})
 
 	var checkRescheduleResult = func(deploy1PossibleReplicas [][]int32, expectedWorkloads []appsv1alpha1.ObservedWorkload) {
-		// 1. check rebalancer status: match to `expectedWorkloads`.
-		framework.WaitRebalancerObservedWorkloads(karmadaClient, rebalancerName, expectedWorkloads)
+		framework.WaitDeploymentFitWith(kubeClient, namespace, deploy1Name, func(dep *appsv1.Deployment) bool {
+			buf, err := json.Marshal(dep)
+			klog.Infof("dep: %s, err: %+v", buf, err)
+			return true
+		})
 		// 2. check deploy1: referenced binding's `spec.rescheduleTriggeredAt` and `status.lastScheduledTime` should be
 		// updated + actual distribution of replicas should change.
 		framework.WaitResourceBindingFitWith(karmadaClient, namespace, deploy1BindingName, func(rb *workv1alpha2.ResourceBinding) bool {
+			buf, err := json.Marshal(rb)
+			klog.Infof("rb: %s, err: %+v", buf, err)
 			return bindingHasRescheduled(rb.Spec, rb.Status, rebalancer.CreationTimestamp)
 		})
+
+		// 1. check rebalancer status: match to `expectedWorkloads`.
+		framework.WaitRebalancerObservedWorkloads(karmadaClient, rebalancerName, expectedWorkloads)
+
 		framework.AssertBindingScheduleResult(karmadaClient, namespace, deploy1BindingName, targetClusters, deploy1PossibleReplicas)
 		// 3. check clusterrole: referenced binding's `spec.rescheduleTriggeredAt` and `status.lastScheduledTime` should be updated.
 		framework.WaitClusterResourceBindingFitWith(karmadaClient, clusterroleBindingName, func(crb *workv1alpha2.ClusterResourceBinding) bool {

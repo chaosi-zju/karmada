@@ -18,8 +18,8 @@ package framework
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -69,6 +69,10 @@ func WaitRebalancerObservedWorkloads(client karmada.Interface, name string, expe
 			if err != nil {
 				return false
 			}
+
+			buf, err:= json.Marshal(rebalancer)
+			klog.Infof("rebalancer: %s, err: %+v", buf, err)
+
 			if len(rebalancer.Status.ObservedWorkloads) == 0 {
 				return false
 			}
