@@ -79,12 +79,24 @@ func (c *RebalancerController) Reconcile(ctx context.Context, req controllerrunt
 	// 2. get and update referenced binding to trigger a rescheduling
 	newStatus, successNum, retryNum := c.doWorkloadRebalance(ctx, rebalancer)
 
+	klog.Infof("new status: %+v", newStatus)
+
 	// 3. update status of WorkloadRebalancer
 	if err := c.updateWorkloadRebalancerStatus(rebalancer, newStatus); err != nil {
 		return controllerruntime.Result{}, err
 	}
 	klog.Infof("Finish handling WorkloadRebalancer (%s), %d/%d resource success in all, while %d resource need retry",
 		rebalancer.Name, successNum, len(newStatus.ObservedWorkloads), retryNum)
+
+	rebalancer = &appsv1alpha1.WorkloadRebalancer{}
+	if err := c.Client.Get(ctx, req.NamespacedName, rebalancer); err != nil {
+		if apierrors.IsNotFound(err) {
+			klog.Infof("no need to reconcile WorkloadRebalancer for it not found")
+			return controllerruntime.Result{}, nil
+		}
+		return controllerruntime.Result{}, err
+	}
+	klog.Infof("rebalancer status: %+v", rebalancer.Status)
 
 	if retryNum > 0 {
 		return controllerruntime.Result{}, fmt.Errorf("%d resource reschedule triggered failed and need retry", retryNum)
