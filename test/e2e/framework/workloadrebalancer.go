@@ -70,7 +70,7 @@ func WaitRebalancerObservedWorkloads(client karmada.Interface, name string, expe
 				return false
 			}
 
-			buf, err:= json.Marshal(rebalancer)
+			buf, err := json.Marshal(rebalancer)
 			klog.Infof("rebalancer: %s, err: %+v", buf, err)
 
 			if len(rebalancer.Status.ObservedWorkloads) == 0 {
@@ -105,7 +105,6 @@ func checkRebalancerObservedWorkloads(observedWorkloads, expectedWorkloads []app
 func genObjectReferenceKey(obj appsv1alpha1.ObjectReference) string {
 	if obj.Namespace == "" {
 		return fmt.Sprintf("%s#%s#%s", obj.APIVersion, obj.Kind, obj.Name)
-	}else{
-		return fmt.Sprintf("%s#%s#%s#%s", obj.APIVersion, obj.Kind, obj.Name, obj.Namespace)
 	}
+	return fmt.Sprintf("%s#%s#%s#%s", obj.APIVersion, obj.Kind, obj.Name, obj.Namespace)
 }
