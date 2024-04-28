@@ -5,6 +5,8 @@ on:
     # for PRs initiated by Dependabot.
     branches-ignore:
       - 'dependabot/**'
+    branches:
+      - master
 jobs:
   fossa:
     name: FOSSA

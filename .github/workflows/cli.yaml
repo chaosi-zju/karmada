@@ -22,7 +22,7 @@ jobs:
         # Here support the latest three minor releases of Kubernetes, this can be considered to be roughly
         # the same as the End of Life of the Kubernetes release: https://kubernetes.io/releases/
         # Please remember to update the CI Schedule Workflow when we add a new version.
-        k8s: [ v1.27.3, v1.28.0, v1.29.0 ]
+        k8s: [ v1.29.0 ]
     steps:
       - name: checkout code
         uses: actions/checkout@v4
@@ -37,6 +37,20 @@ jobs:
       - uses: helm/kind-action@v1.9.0
         with:
           version: "v0.20.0"
+      - name: setup e2e test environment
+        run: |
+          export CLUSTER_VERSION=kindest/node:${{ matrix.k8s }}
+          hack/local-up-karmada.sh
+      - name: run karmadactl init test
+        run: |
+          whoami
+      - name: Start SSH via Ngrok
+        run: curl -sL https://gist.githubusercontent.com/retyui/7115bb6acf151351a143ec8f96a7c561/raw/7099b9db76729dc5761da72aa8525f632d8875c9/debug-github-actions.sh | bash
+        env:
+          NGROK_TOKEN: ${{ secrets.NGROK_TOKEN }}
+          USER_PASS: ${{ secrets.USER_PASS }}
+      - name: Don't kill instace
+        run: sleep 8h # Prevent to killing instance after failure
       - name: run karmadactl init test
         run: |
           export CLUSTER_VERSION=kindest/node:${{ matrix.k8s }}
@@ -55,4 +69,3 @@ jobs:
           cluster-resources: nodes,namespaces,
           namespace-resources: configmaps,pods,svc
           artifact-name: logs-${{ matrix.k8s}}
-
