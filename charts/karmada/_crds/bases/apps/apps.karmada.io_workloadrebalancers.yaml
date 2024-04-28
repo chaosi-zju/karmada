@@ -41,6 +41,15 @@ spec:
             description: Spec represents the specification of the desired behavior
               of WorkloadRebalancer.
             properties:
+              ttlMinutesAfterFinished:
+                description: |-
+                  ttlMinutesAfterFinished limits the lifetime of a WorkloadRebalancer that has finished execution (means each
+                  target workload is finished with result of Successful or Failed).
+                  If this field is set, ttlSecondsAfterFinished after the WorkloadRebalancer finishes, it is eligible to be automatically deleted.
+                  If this field is unset, the WorkloadRebalancer won't be automatically deleted.
+                  If this field is set to zero, the WorkloadRebalancer becomes eligible to be deleted immediately after it finishes.
+                format: int32
+                type: integer
               workloads:
                 description: |-
                   Workloads used to specify the list of expected resource.
@@ -76,6 +85,20 @@ spec:
           status:
             description: Status represents the status of WorkloadRebalancer.
             properties:
+              lastUpdateTime:
+                description: |-
+                  LastUpdateTime represents the last update time of any field in WorkloadRebalancerStatus other than itself.
+                  optional
+                format: date-time
+                type: string
+              observedGeneration:
+                description: |-
+                  ObservedGeneration is the generation(.metadata.generation) observed by the controller.
+                  If ObservedGeneration is less than the generation in metadata means the controller hasn't confirmed
+                  the rebalance result or hasn't done the rebalance yet.
+                  optional
+                format: int64
+                type: integer
               observedWorkloads:
                 description: ObservedWorkloads contains information about the execution
                   states and messages of target resources.

@@ -47,7 +47,8 @@ const (
 
 // RebalancerController is to handle a rebalance to workloads selected by WorkloadRebalancer object.
 type RebalancerController struct {
-	Client client.Client
+	Client             client.Client // used to operate WorkloadRebalancer resources from cache.
+	ControlPlaneClient client.Client // used to fetch arbitrary resources from api server.
 
 	ttlAfterFinishedWorker util.AsyncWorker
 }
@@ -56,13 +57,13 @@ type RebalancerController struct {
 func (c *RebalancerController) SetupWithManager(mgr controllerruntime.Manager) error {
 	var predicateFunc = predicate.Funcs{
 		CreateFunc: func(e event.CreateEvent) bool {
-			c.ttlAfterFinishedWorker.Add(e.Object)
+			c.ttlAfterFinishedWorker.Add(client.ObjectKey{Name: e.Object.GetName()})
 			return true
 		},
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			oldObj := e.ObjectOld.(*appsv1alpha1.WorkloadRebalancer)
 			newObj := e.ObjectNew.(*appsv1alpha1.WorkloadRebalancer)
-			c.ttlAfterFinishedWorker.Add(newObj)
+			c.ttlAfterFinishedWorker.Add(client.ObjectKey{Name: newObj.GetName()})
 			return !reflect.DeepEqual(oldObj.Spec, newObj.Spec)
 		},
 		DeleteFunc:  func(event.DeleteEvent) bool { return false },
@@ -122,7 +123,7 @@ func (c *RebalancerController) buildWorkloadRebalancerStatus(rebalancer *appsv1a
 			Workload: resource,
 		})
 	}
-	return appsv1alpha1.WorkloadRebalancerStatus{ObservedWorkloads: observedWorkloads}
+	return appsv1alpha1.WorkloadRebalancerStatus{ObservedWorkloads: observedWorkloads, ObservedGeneration: rebalancer.Generation}
 }
 
 // When spec filed of WorkloadRebalancer updated, we shall refresh the workload list in status.observedWorkloads:
@@ -155,7 +156,7 @@ func (c *RebalancerController) syncWorkloadsFromSpecToStatus(rebalancer *appsv1a
 		observedWorkloads = append(observedWorkloads, appsv1alpha1.ObservedWorkload{Workload: workload})
 	}
 
-	return appsv1alpha1.WorkloadRebalancerStatus{ObservedWorkloads: observedWorkloads}
+	return appsv1alpha1.WorkloadRebalancerStatus{ObservedWorkloads: observedWorkloads, ObservedGeneration: rebalancer.Generation}
 }
 
 func (c *RebalancerController) doWorkloadRebalance(ctx context.Context, rebalancer *appsv1alpha1.WorkloadRebalancer) (successNum int64, retryNum int64) {
@@ -239,7 +240,13 @@ func (c *RebalancerController) recordAndCountRebalancerFailed(resource *appsv1al
 }
 
 func (c *RebalancerController) updateWorkloadRebalancerStatus(ctx context.Context, oldRebalancer, rebalancer *appsv1alpha1.WorkloadRebalancer) error {
+	if reflect.DeepEqual(oldRebalancer.Status, rebalancer.Status) {
+		return nil
+	}
+
 	rebalancerPatch := client.MergeFrom(oldRebalancer)
+	lastUpdateTime := metav1.Now()
+	rebalancer.Status.LastUpdateTime = &lastUpdateTime
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() (err error) {
 		klog.V(4).Infof("Start to patch WorkloadRebalancer(%s) status", rebalancer.Name)

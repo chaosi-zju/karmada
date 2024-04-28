@@ -711,7 +711,8 @@ func startRemedyController(ctx controllerscontext.Context) (enabled bool, err er
 
 func startWorkloadRebalancerController(ctx controllerscontext.Context) (enabled bool, err error) {
 	workloadRebalancer := workloadrebalancer.RebalancerController{
-		Client: ctx.Mgr.GetClient(),
+		Client:             ctx.Mgr.GetClient(),
+		ControlPlaneClient: ctx.ControlPlaneClient,
 	}
 	err = workloadRebalancer.SetupWithManager(ctx.Mgr)
 	if err != nil {
@@ -727,6 +728,7 @@ func setupControllers(mgr controllerruntime.Manager, opts *options.Options, stop
 	dynamicClientSet := dynamic.NewForConfigOrDie(restConfig)
 	discoverClientSet := discovery.NewDiscoveryClientForConfigOrDie(restConfig)
 	kubeClientSet := kubeclientset.NewForConfigOrDie(restConfig)
+	controlPlaneClient := gclient.NewForConfigOrDie(restConfig)
 
 	overrideManager := overridemanager.New(mgr.GetClient(), mgr.GetEventRecorderFor(overridemanager.OverrideManagerName))
 	skippedResourceConfig := util.NewSkippedResourceConfig()
@@ -812,6 +814,7 @@ func setupControllers(mgr controllerruntime.Manager, opts *options.Options, stop
 		StopChan:                    stopChan,
 		DynamicClientSet:            dynamicClientSet,
 		KubeClientSet:               kubeClientSet,
+		ControlPlaneClient:          controlPlaneClient,
 		OverrideManager:             overrideManager,
 		ControlPlaneInformerManager: controlPlaneInformerManager,
 		ResourceInterpreter:         resourceInterpreter,

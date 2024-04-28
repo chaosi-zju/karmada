@@ -93,6 +93,16 @@ type WorkloadRebalancerStatus struct {
 	// ObservedWorkloads contains information about the execution states and messages of target resources.
 	// +optional
 	ObservedWorkloads []ObservedWorkload `json:"observedWorkloads,omitempty"`
+
+	// ObservedGeneration is the generation(.metadata.generation) observed by the controller.
+	// If ObservedGeneration is less than the generation in metadata means the controller hasn't confirmed
+	// the rebalance result or hasn't done the rebalance yet.
+	// optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	// LastUpdateTime represents the last update time of any field in WorkloadRebalancerStatus other than itself.
+	// optional
+	LastUpdateTime *metav1.Time `json:"lastUpdateTime,omitempty"`
 }
 
 // ObservedWorkload the observed resource.

@@ -127,6 +127,11 @@ func (in *WorkloadRebalancerSpec) DeepCopyInto(out *WorkloadRebalancerSpec) {
 		*out = make([]ObjectReference, len(*in))
 		copy(*out, *in)
 	}
+	if in.TTLMinutesAfterFinished != nil {
+		in, out := &in.TTLMinutesAfterFinished, &out.TTLMinutesAfterFinished
+		*out = new(int32)
+		**out = **in
+	}
 	return
 }
 
@@ -147,6 +152,10 @@ func (in *WorkloadRebalancerStatus) DeepCopyInto(out *WorkloadRebalancerStatus) 
 		in, out := &in.ObservedWorkloads, &out.ObservedWorkloads
 		*out = make([]ObservedWorkload, len(*in))
 		copy(*out, *in)
+	}
+	if in.LastUpdateTime != nil {
+		in, out := &in.LastUpdateTime, &out.LastUpdateTime
+		*out = (*in).DeepCopy()
 	}
 	return
 }
