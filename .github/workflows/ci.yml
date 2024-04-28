@@ -33,7 +33,7 @@ jobs:
       - name: check protoc
         run: protoc --version || true
       - name: Install Protoc
-        uses: arduino/setup-protoc@v1
+        uses: arduino/setup-protoc@v3
         with:
           version: '3.x'
           # Use the automatic token, so that this task can be run in the forked repo.
