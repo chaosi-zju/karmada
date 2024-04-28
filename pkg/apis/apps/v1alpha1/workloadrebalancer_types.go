@@ -57,6 +57,14 @@ type WorkloadRebalancerSpec struct {
 	// +kubebuilder:validation:MinItems=1
 	// +required
 	Workloads []ObjectReference `json:"workloads"`
+
+	// ttlMinutesAfterFinished limits the lifetime of a WorkloadRebalancer that has finished execution (means each
+	// target workload is finished with result of Successful or Failed).
+	// If this field is set, ttlSecondsAfterFinished after the WorkloadRebalancer finishes, it is eligible to be automatically deleted.
+	// If this field is unset, the WorkloadRebalancer won't be automatically deleted.
+	// If this field is set to zero, the WorkloadRebalancer becomes eligible to be deleted immediately after it finishes.
+	// +optional
+	TTLMinutesAfterFinished *int32 `json:"ttlMinutesAfterFinished,omitempty"`
 }
 
 // ObjectReference the expected resource.
@@ -117,7 +125,7 @@ type RebalanceFailedReason string
 
 const (
 	// RebalanceObjectNotFound the resource referenced binding not found.
-	RebalanceObjectNotFound RebalanceFailedReason = "NotFound"
+	RebalanceObjectNotFound RebalanceFailedReason = "ReferencedBindingNotFound"
 )
 
 // +kubebuilder:resource:scope="Cluster"

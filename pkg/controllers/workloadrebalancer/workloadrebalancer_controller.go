@@ -32,27 +32,45 @@ import (
 
 	appsv1alpha1 "github.com/karmada-io/karmada/pkg/apis/apps/v1alpha1"
 	workv1alpha2 "github.com/karmada-io/karmada/pkg/apis/work/v1alpha2"
+	"github.com/karmada-io/karmada/pkg/util"
 	"github.com/karmada-io/karmada/pkg/util/names"
 )
 
 const (
 	// ControllerName is the controller name that will be used when reporting events.
 	ControllerName = "workload-rebalancer"
+
+	ttlAfterFinishedWorkerNum = 1
 )
 
 // RebalancerController is to handle a rebalance to workloads selected by WorkloadRebalancer object.
 type RebalancerController struct {
 	Client client.Client
+
+	ttlAfterFinishedWorker util.AsyncWorker
 }
 
 // SetupWithManager creates a controller and register to controller manager.
 func (c *RebalancerController) SetupWithManager(mgr controllerruntime.Manager) error {
 	var predicateFunc = predicate.Funcs{
-		CreateFunc:  func(e event.CreateEvent) bool { return true },
-		UpdateFunc:  func(e event.UpdateEvent) bool { return false },
+		CreateFunc: func(e event.CreateEvent) bool {
+			c.ttlAfterFinishedWorker.Add(e.Object)
+			return true
+		},
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			c.ttlAfterFinishedWorker.Add(e.ObjectNew)
+			return true
+		},
 		DeleteFunc:  func(event.DeleteEvent) bool { return false },
 		GenericFunc: func(event.GenericEvent) bool { return false },
 	}
+
+	ttlAfterFinishedWorkerOptions := util.Options{
+		Name:          "ttl-after-finished-worker",
+		ReconcileFunc: c.deleteExpiredRebalancer,
+	}
+	c.ttlAfterFinishedWorker = util.NewAsyncWorker(ttlAfterFinishedWorkerOptions)
+	c.ttlAfterFinishedWorker.Run(ttlAfterFinishedWorkerNum, context.Background().Done())
 
 	return controllerruntime.NewControllerManagedBy(mgr).
 		Named(ControllerName).
