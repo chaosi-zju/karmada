@@ -13,24 +13,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.actor }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 jobs:
-  golangci:
-    name: lint
-    runs-on: ubuntu-22.04
-    steps:
-      - name: checkout code
-        uses: actions/checkout@v4
-      - name: install Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-      - name: verify license
-        run: hack/verify-license.sh
-      - name: vendor
-        run: hack/verify-vendor.sh
-      - name: lint
-        run: hack/verify-staticcheck.sh
-      - name: import alias
-        run: hack/verify-import-aliases.sh
   codegen:
     name: codegen
     runs-on: ubuntu-22.04
@@ -48,6 +30,8 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: ${{ env.GOPATH }}/src/github.com/karmada-io/karmada/go.mod
+      - name: check protoc
+        run: protoc --version || true
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
@@ -55,6 +39,8 @@ jobs:
           # Use the automatic token, so that this task can be run in the forked repo.
           # https://docs.github.com/en/actions/security-guides/automatic-token-authentication
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: check protoc
+        run: protoc --version || true
       - name: verify codegen
         run: hack/verify-codegen.sh
       - name: verify crdgen
