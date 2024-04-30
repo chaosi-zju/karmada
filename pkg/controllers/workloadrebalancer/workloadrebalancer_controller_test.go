@@ -190,6 +190,7 @@ func TestRebalancerController_Reconcile(t *testing.T) {
 			if err := c.Client.Get(context.TODO(), tt.req.NamespacedName, rebalancerGet); err != nil {
 				t.Errorf("get WorkloadRebalancer failed: %+v", err)
 			}
+			tt.wantStatus.LastUpdateTime = rebalancerGet.Status.LastUpdateTime
 			if !reflect.DeepEqual(rebalancerGet.Status, tt.wantStatus) {
 				t.Errorf("update WorkloadRebalancer failed, got: %+v, want: %+v", rebalancerGet.Status, tt.wantStatus)
 			}

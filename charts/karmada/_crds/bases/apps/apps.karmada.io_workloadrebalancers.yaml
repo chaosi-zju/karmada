@@ -42,6 +42,7 @@ spec:
               of WorkloadRebalancer.
             properties:
               ttlMinutesAfterFinished:
+                default: 60
                 description: |-
                   ttlMinutesAfterFinished limits the lifetime of a WorkloadRebalancer that has finished execution (means each
                   target workload is finished with result of Successful or Failed).

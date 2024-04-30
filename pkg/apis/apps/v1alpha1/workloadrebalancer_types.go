@@ -63,7 +63,9 @@ type WorkloadRebalancerSpec struct {
 	// If this field is set, ttlSecondsAfterFinished after the WorkloadRebalancer finishes, it is eligible to be automatically deleted.
 	// If this field is unset, the WorkloadRebalancer won't be automatically deleted.
 	// If this field is set to zero, the WorkloadRebalancer becomes eligible to be deleted immediately after it finishes.
+	//
 	// +optional
+	// +kubebuilder:default=60
 	TTLMinutesAfterFinished *int32 `json:"ttlMinutesAfterFinished,omitempty"`
 }
 

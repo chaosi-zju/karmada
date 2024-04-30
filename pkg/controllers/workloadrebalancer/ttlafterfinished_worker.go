@@ -106,7 +106,7 @@ func (c *RebalancerController) processTTL(r *appsv1alpha1.WorkloadRebalancer) (e
 func timeLeft(r *appsv1alpha1.WorkloadRebalancer) (*time.Duration, *time.Time, error) {
 	now := time.Now()
 	finishAt := r.Status.LastUpdateTime.Time
-	expireAt := finishAt.Add(time.Duration(*r.Spec.TTLMinutesAfterFinished) * time.Second)
+	expireAt := finishAt.Add(time.Duration(*r.Spec.TTLMinutesAfterFinished) * time.Minute)
 
 	if finishAt.After(now) {
 		klog.Infof("Found Rebalancer(%s) finished in the future. This is likely due to time skew in the cluster, cleanup will be deferred.", r.Name)
