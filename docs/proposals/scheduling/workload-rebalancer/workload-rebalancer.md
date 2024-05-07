@@ -24,10 +24,14 @@ However, in some scenarios, users hope to have means to actively trigger resched
 
 ### Motivation
 
-Assuming the user has propagated the workloads to member clusters, replicas migrated due to member cluster failure.
+Assuming the user has propagated the workloads to member clusters, in some scenarios the current replicas distribution
+is not the most expected, such as:
 
-However, the user expects an approach to trigger rescheduling after member cluster restored, so that replicas can
-migrate back.
+* 
+
+replicas migrated due to member cluster failure.
+
+Therefore, the user desires for an approach to trigger rescheduling so that the replicas distribution can do a re-balance.
 
 ### Goals
 
