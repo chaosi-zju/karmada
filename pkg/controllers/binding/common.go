@@ -71,6 +71,15 @@ func ensureWork(
 		}
 	}
 
+	var hpaMaxReplicas []workv1alpha2.TargetCluster
+	if workload.GetKind() == util.HorizontalPodAutoscalerKind &&
+		needDivideHPAMaxReplicas(placement.ReplicaSchedulingType(), replicas, targetClusters) {
+		hpaMaxReplicas, err = divideHPAMaxReplicas(workload, targetClusters)
+		if err != nil {
+			return err
+		}
+	}
+
 	for i := range targetClusters {
 		targetCluster := targetClusters[i]
 		clonedWorkload := workload.DeepCopy()
@@ -96,6 +105,18 @@ func ensureWork(
 			if len(jobCompletions) > 0 {
 				if err = helper.ApplyReplica(clonedWorkload, int64(jobCompletions[i].Replicas), util.CompletionsField); err != nil {
 					klog.Errorf("Failed to apply Completions for %s/%s/%s in cluster %s, err is: %v",
+						clonedWorkload.GetKind(), clonedWorkload.GetNamespace(), clonedWorkload.GetName(), targetCluster.Name, err)
+					return err
+				}
+			}
+
+			// In some HPA usage scenarios, users want to control the total number of replicas across all clusters to meet
+			// the min-replicas and max-replicas limits. This can be achieved by enabling the splitting of min-replicas
+			// through a custom resource interpreter. When min-replicas are split, the corresponding max-replicas should
+			// also be split accordingly.
+			if len(hpaMaxReplicas) > 0 {
+				if err = helper.ApplyReplica(clonedWorkload, int64(hpaMaxReplicas[i].Replicas), "maxReplicas"); err != nil {
+					klog.Errorf("Failed to apply MaxReplicas for %s/%s/%s in cluster %s, err is: %v",
 						clonedWorkload.GetKind(), clonedWorkload.GetNamespace(), clonedWorkload.GetName(), targetCluster.Name, err)
 					return err
 				}
@@ -254,4 +275,35 @@ func divideReplicasByJobCompletions(workload *unstructured.Unstructured, cluster
 
 func needReviseReplicas(replicas int32, placement *policyv1alpha1.Placement) bool {
 	return replicas > 0 && placement != nil && placement.ReplicaSchedulingType() == policyv1alpha1.ReplicaSchedulingTypeDivided
+}
+
+func needDivideHPAMaxReplicas(scheduleType policyv1alpha1.ReplicaSchedulingType, replicas int32, clusters []workv1alpha2.TargetCluster) bool {
+	if scheduleType != policyv1alpha1.ReplicaSchedulingTypeDivided {
+		return false
+	}
+
+	sumReplicas := int32(0)
+	for _, cluster := range clusters {
+		sumReplicas += cluster.Replicas
+	}
+
+	return replicas == sumReplicas
+}
+
+func divideHPAMaxReplicas(workload *unstructured.Unstructured, clusters []workv1alpha2.TargetCluster) ([]workv1alpha2.TargetCluster, error) {
+	var targetClusters []workv1alpha2.TargetCluster
+	maxReplicas, found, err := unstructured.NestedInt64(workload.Object, util.SpecField, "maxReplicas")
+	if err != nil {
+		return nil, err
+	}
+
+	if maxReplicas < int64(len(clusters)) {
+		maxReplicas = int64(len(clusters))
+	}
+
+	if found {
+		targetClusters = helper.SpreadReplicasByTargetClusters(int32(maxReplicas), clusters, nil)
+	}
+
+	return targetClusters, nil
 }
