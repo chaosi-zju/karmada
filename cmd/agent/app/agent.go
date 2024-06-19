@@ -45,6 +45,7 @@ import (
 	workv1alpha1 "github.com/karmada-io/karmada/pkg/apis/work/v1alpha1"
 	"github.com/karmada-io/karmada/pkg/controllers/certificate"
 	controllerscontext "github.com/karmada-io/karmada/pkg/controllers/context"
+	distributedhpafollower "github.com/karmada-io/karmada/pkg/controllers/distributedhpa/follower"
 	"github.com/karmada-io/karmada/pkg/controllers/execution"
 	"github.com/karmada-io/karmada/pkg/controllers/mcs"
 	"github.com/karmada-io/karmada/pkg/controllers/multiclusterservice"
@@ -131,6 +132,7 @@ func init() {
 	controllers["serviceExport"] = startServiceExportController
 	controllers["certRotation"] = startCertRotationController
 	controllers["endpointsliceCollect"] = startEndpointSliceCollectController
+	controllers["distributedHPA"] = startDistributedHPAFollowerController
 }
 
 func run(ctx context.Context, opts *options.Options) error {
@@ -427,6 +429,16 @@ func startCertRotationController(ctx controllerscontext.Context) (bool, error) {
 		KarmadaKubeconfigNamespace:         ctx.Opts.KarmadaKubeconfigNamespace,
 	}
 	if err := certRotationController.SetupWithManager(ctx.Mgr); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func startDistributedHPAFollowerController(ctx controllerscontext.Context) (bool, error) {
+	distributedHPAController := distributedhpafollower.DistributedHPAController{
+		RatelimiterOptions: ctx.Opts.RateLimiterOptions,
+	}
+	if err := distributedHPAController.SetupWithManager(ctx.Mgr); err != nil {
 		return false, err
 	}
 	return true, nil
