@@ -42,7 +42,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	autoscalingv1alpha1 "github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1"
-	"github.com/karmada-io/karmada/pkg/util/names"
 )
 
 const (
@@ -60,6 +59,7 @@ var (
 type DistributedHPAController struct {
 	client.Client // used to operate Cluster resources.
 
+	ClusterName     string
 	ScaleNamespacer scaleclient.ScalesGetter
 	Mapper          apimeta.RESTMapper
 
@@ -67,7 +67,7 @@ type DistributedHPAController struct {
 
 	// PodLister is able to list/get Pods from the shared cache from the informer passed in to
 	// NewHorizontalController.
-	PodLister       corelisters.PodLister
+	PodLister corelisters.PodLister
 
 	ResyncPeriod time.Duration
 }
@@ -119,13 +119,7 @@ func (a *DistributedHPAController) Reconcile(ctx context.Context, req controller
 		return controllerruntime.Result{}, err
 	}
 
-	clusterName, err := names.GetClusterName(hpa.GetNamespace())
-	if err != nil {
-		klog.Errorf("Failed to get member cluster name by %s. Error: %v.", hpa.GetNamespace(), err)
-		return controllerruntime.Result{}, err
-	}
-
-	if err := a.updateStatusIfNeeded(ctx, hpa, clusterName, clusterStatus); err != nil {
+	if err := a.updateStatusIfNeeded(ctx, hpa, a.ClusterName, clusterStatus); err != nil {
 		return controllerruntime.Result{}, err
 	}
 
@@ -216,6 +210,9 @@ func (a *DistributedHPAController) updateStatusIfNeeded(ctx context.Context, hpa
 	}
 
 	modifiedHPA := hpa.DeepCopy()
+	if modifiedHPA.Status.ClusterStatus == nil {
+		modifiedHPA.Status.ClusterStatus = make(map[string]autoscalingv1alpha1.FederatedHPAClusterStatus)
+	}
 	modifiedHPA.Status.ClusterStatus[clusterName] = *clusterStatus
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() (err error) {

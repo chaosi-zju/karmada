@@ -166,8 +166,9 @@ func (c *FHPAController) Reconcile(ctx context.Context, req controllerruntime.Re
 		return controllerruntime.Result{}, err
 	}
 
+	klog.Infof("hpa.Spec.ScaleMode: %+v", hpa.Spec.ScaleMode)
 	if hpa.Spec.ScaleMode != autoscalingv1alpha1.Center {
-		klog.V(4).Infof("No need to reconcile FederatedHPA %s.", req.NamespacedName.String())
+		klog.Infof("No need to reconcile FederatedHPA %s.", req.NamespacedName.String())
 		return controllerruntime.Result{}, nil
 	}
 

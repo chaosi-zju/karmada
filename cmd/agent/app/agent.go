@@ -482,6 +482,7 @@ func startDistributedHPAFollowerController(ctx controllerscontext.Context) (bool
 		ctx.Opts.HPAControllerConfiguration.HorizontalPodAutoscalerInitialReadinessDelay.Duration)
 	distributedHPAController := distributedhpafollower.DistributedHPAController{
 		Client:          ctx.Mgr.GetClient(),
+		ClusterName:     ctx.Opts.ClusterName,
 		ScaleNamespacer: scaleClient,
 		Mapper:          restMapper,
 		ReplicaCalc:     replicaCalculator,
