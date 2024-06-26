@@ -16801,49 +16801,43 @@
       "type": "object",
       "required": [
         "metricName",
-        "metricTotal",
-        "metricCount",
-        "lastUpdateTime",
-        "unreadyPodsCount",
-        "missingPodsCount",
-        "unreadyPodRequestTotal",
-        "requestTotal"
+        "averageValue",
+        "metricValueCount",
+        "metricTimestamp"
       ],
       "properties": {
-        "lastUpdateTime": {
-          "$ref": "#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.Time"
-        },
-        "metricCount": {
+        "averageRequest": {
           "type": "integer",
-          "format": "int32",
+          "format": "int64"
+        },
+        "averageValue": {
+          "type": "integer",
+          "format": "int64",
           "default": 0
         },
         "metricName": {
           "type": "string",
           "default": ""
         },
-        "metricTotal": {
+        "metricTimestamp": {
+          "$ref": "#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.Time"
+        },
+        "metricValueCount": {
           "type": "integer",
-          "format": "int64",
+          "format": "int32",
           "default": 0
+        },
+        "missingPodsAverageRequest": {
+          "type": "integer",
+          "format": "int64"
         },
         "missingPodsCount": {
           "type": "integer",
-          "format": "int32",
-          "default": 0
-        },
-        "requestTotal": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "unreadyPodRequestTotal": {
-          "type": "integer",
-          "format": "int64"
+          "format": "int32"
         },
         "unreadyPodsCount": {
           "type": "integer",
-          "format": "int32",
-          "default": 0
+          "format": "int32"
         }
       }
     },

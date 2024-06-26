@@ -178,7 +178,7 @@ func GetMetricsAverageValue(metrics metricsclient.PodMetricsInfo) int64 {
 	return metricsTotal / int64(len(metrics))
 }
 
-func GetAverageRequest(metrics metricsclient.PodMetricsInfo, requests map[string]int64) (int64, int64) {
+func GetAverageRequest(metrics metricsclient.PodMetricsInfo, requests map[string]int64) (averageRequest, missingPodAverageRequest int64) {
 	requestsCount, missingPodRequests := int64(0), int64(0)
 	requestsTotal, missingPodRequestsTotal := int64(0), int64(0)
 	for podName, request := range requests {
@@ -190,5 +190,12 @@ func GetAverageRequest(metrics metricsclient.PodMetricsInfo, requests map[string
 			missingPodRequests++
 		}
 	}
-	return requestsTotal / requestsCount, missingPodRequestsTotal / missingPodRequests
+
+	if requestsCount > 0 {
+		averageRequest = requestsTotal / requestsCount
+	}
+	if missingPodRequests > 0 {
+		missingPodAverageRequest = missingPodRequestsTotal / missingPodRequests
+	}
+	return
 }

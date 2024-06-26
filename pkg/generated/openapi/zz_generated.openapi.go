@@ -833,53 +833,51 @@ func schema_pkg_apis_autoscaling_v1alpha1_ClusterMetric(ref common.ReferenceCall
 							Format:  "",
 						},
 					},
-					"metricTotal": {
+					"averageValue": {
 						SchemaProps: spec.SchemaProps{
 							Default: 0,
 							Type:    []string{"integer"},
 							Format:  "int64",
 						},
 					},
-					"metricCount": {
+					"metricValueCount": {
 						SchemaProps: spec.SchemaProps{
 							Default: 0,
 							Type:    []string{"integer"},
 							Format:  "int32",
 						},
 					},
-					"lastUpdateTime": {
+					"metricTimestamp": {
 						SchemaProps: spec.SchemaProps{
 							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
-					"unreadyPodsCount": {
+					"averageRequest": {
 						SchemaProps: spec.SchemaProps{
-							Default: 0,
-							Type:    []string{"integer"},
-							Format:  "int32",
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
+					"missingPodsAverageRequest": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
 						},
 					},
 					"missingPodsCount": {
 						SchemaProps: spec.SchemaProps{
-							Default: 0,
-							Type:    []string{"integer"},
-							Format:  "int32",
+							Type:   []string{"integer"},
+							Format: "int32",
 						},
 					},
-					"unreadyPodRequestTotal": {
+					"unreadyPodsCount": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"integer"},
-							Format: "int64",
-						},
-					},
-					"requestTotal": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int64",
+							Format: "int32",
 						},
 					},
 				},
-				Required: []string{"metricName", "metricTotal", "metricCount", "lastUpdateTime", "unreadyPodsCount", "missingPodsCount", "unreadyPodRequestTotal", "requestTotal"},
+				Required: []string{"metricName", "averageValue", "metricValueCount", "metricTimestamp"},
 			},
 		},
 		Dependencies: []string{

@@ -30,13 +30,13 @@ import (
 func (in *ClusterMetric) DeepCopyInto(out *ClusterMetric) {
 	*out = *in
 	in.MetricTimestamp.DeepCopyInto(&out.MetricTimestamp)
-	if in.MissingPodAverageRequest != nil {
-		in, out := &in.MissingPodAverageRequest, &out.MissingPodAverageRequest
+	if in.AverageRequest != nil {
+		in, out := &in.AverageRequest, &out.AverageRequest
 		*out = new(int64)
 		**out = **in
 	}
-	if in.AverageRequest != nil {
-		in, out := &in.AverageRequest, &out.AverageRequest
+	if in.MissingPodAverageRequest != nil {
+		in, out := &in.MissingPodAverageRequest, &out.MissingPodAverageRequest
 		*out = new(int64)
 		**out = **in
 	}

@@ -24,7 +24,7 @@ import (
 
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	autoscalingv2 "k8s.io/api/autoscaling/v2"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
@@ -298,7 +298,7 @@ func (a *DistributedHPAController) computeStatusForResourceMetric(ctx context.Co
 }
 
 func (a *DistributedHPAController) computeStatusForResourceMetricGeneric(ctx context.Context, target autoscalingv2.MetricTarget,
-	resourceName v1.ResourceName, namespace string, container string, selector labels.Selector, sourceType autoscalingv2.MetricSourceType) (
+	resourceName corev1.ResourceName, namespace string, container string, selector labels.Selector, sourceType autoscalingv2.MetricSourceType) (
 	clusterMetric *autoscalingv1alpha1.ClusterMetric, err error) {
 	if target.AverageValue != nil {
 		clusterMetric, err = a.ReplicaCalc.GetResourceMetric(ctx, resourceName, namespace, selector, container)

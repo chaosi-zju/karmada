@@ -697,35 +697,31 @@ spec:
                     metric:
                       items:
                         properties:
-                          lastUpdateTime:
-                            format: date-time
-                            type: string
-                          metricCount:
+                          averageRequest:
+                            format: int64
+                            type: integer
+                          averageValue:
+                            format: int64
                             type: integer
                           metricName:
                             type: string
-                          metricTotal:
+                          metricTimestamp:
+                            format: date-time
+                            type: string
+                          metricValueCount:
+                            type: integer
+                          missingPodsAverageRequest:
                             format: int64
                             type: integer
                           missingPodsCount:
                             type: integer
-                          requestTotal:
-                            format: int64
-                            type: integer
-                          unreadyPodRequestTotal:
-                            format: int64
-                            type: integer
                           unreadyPodsCount:
                             type: integer
                         required:
-                        - lastUpdateTime
-                        - metricCount
+                        - averageValue
                         - metricName
-                        - metricTotal
-                        - missingPodsCount
-                        - requestTotal
-                        - unreadyPodRequestTotal
-                        - unreadyPodsCount
+                        - metricTimestamp
+                        - metricValueCount
                         type: object
                       type: array
                   required:

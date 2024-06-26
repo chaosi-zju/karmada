@@ -127,7 +127,7 @@ type FederatedHPAClusterStatus struct {
 type ClusterMetric struct {
 	MetricName string `json:"metricName"`
 
-	AverageValue     int64 `json:"averageValue"`
+	AverageValue     int64       `json:"averageValue"`
 	MetricValueCount int         `json:"metricValueCount"`
 	MetricTimestamp  metav1.Time `json:"metricTimestamp"`
 
