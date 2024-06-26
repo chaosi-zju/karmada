@@ -81,21 +81,22 @@ func (c *ReplicaCalculator) GetResourceMetric(ctx context.Context, resource core
 		return nil, fmt.Errorf("did not receive metrics for targeted pods (pods might be unready)")
 	}
 
-	metricTotal := GetMetricsTotal(metrics)
+	averageValue := GetMetricsAverageValue(metrics)
 	requests, err := calculatePodRequests(podList, container, resource)
 	if err != nil {
 		return nil, err
 	}
-	requestTotal, missingPodRequestsTotal := GetRequestTotal(metrics, requests)
+	averageRequest, missingPodAverageRequest := GetAverageRequest(metrics, requests)
 
 	return &autoscalingv1alpha1.ClusterMetric{
-		MetricTotal:            metricTotal,
-		MetricCount:            len(metrics),
-		LastUpdateTime:         metav1.NewTime(timestamp),
-		UnreadyPodsCount:       len(unreadyPods),
-		MissingPodsCount:       len(missingPods),
-		MissingPodRequestTotal: &missingPodRequestsTotal,
-		RequestTotal:           &requestTotal,
+		AverageValue:     averageValue,
+		MetricValueCount: len(metrics),
+		MetricTimestamp:  metav1.NewTime(timestamp),
+
+		AverageRequest:           &averageRequest,
+		MissingPodAverageRequest: &missingPodAverageRequest,
+		MissingPodsCount:         len(missingPods),
+		UnreadyPodsCount:         len(unreadyPods),
 	}, nil
 }
 
@@ -169,26 +170,25 @@ func removeMetricsForPods(metrics metricsclient.PodMetricsInfo, pods sets.String
 	}
 }
 
-// GetMetricsTotal takes in a set of metrics and a target utilization value,
-// and calculates the ratio of desired to actual utilization
-// (returning that and the actual utilization)
-func GetMetricsTotal(metrics metricsclient.PodMetricsInfo) int64 {
+func GetMetricsAverageValue(metrics metricsclient.PodMetricsInfo) int64 {
 	metricsTotal := int64(0)
 	for _, metric := range metrics {
 		metricsTotal += metric.Value
 	}
-	return metricsTotal
+	return metricsTotal / int64(len(metrics))
 }
 
-func GetRequestTotal(metrics metricsclient.PodMetricsInfo, requests map[string]int64) (int64, int64) {
-	requestsTotal := int64(0)
-	missingPodRequestsTotal := int64(0)
+func GetAverageRequest(metrics metricsclient.PodMetricsInfo, requests map[string]int64) (int64, int64) {
+	requestsCount, missingPodRequests := int64(0), int64(0)
+	requestsTotal, missingPodRequestsTotal := int64(0), int64(0)
 	for podName, request := range requests {
 		if _, hasMetrics := metrics[podName]; hasMetrics {
 			requestsTotal += request
+			requestsCount++
 		} else {
 			missingPodRequestsTotal += request
+			missingPodRequests++
 		}
 	}
-	return requestsTotal, missingPodRequestsTotal
+	return requestsTotal / requestsCount, missingPodRequestsTotal / missingPodRequests
 }

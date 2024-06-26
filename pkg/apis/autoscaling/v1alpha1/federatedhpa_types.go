@@ -125,13 +125,14 @@ type FederatedHPAClusterStatus struct {
 }
 
 type ClusterMetric struct {
-	MetricName     string      `json:"metricName"`
-	MetricTotal    int64       `json:"metricTotal"`
-	MetricCount    int         `json:"metricCount"`
-	LastUpdateTime metav1.Time `json:"lastUpdateTime"`
+	MetricName string `json:"metricName"`
 
-	UnreadyPodsCount       int    `json:"unreadyPodsCount"`
-	MissingPodsCount       int    `json:"missingPodsCount"`
-	MissingPodRequestTotal *int64 `json:"unreadyPodRequestTotal"`
-	RequestTotal           *int64 `json:"requestTotal"`
+	AverageValue     int64 `json:"averageValue"`
+	MetricValueCount int         `json:"metricValueCount"`
+	MetricTimestamp  metav1.Time `json:"metricTimestamp"`
+
+	AverageRequest           *int64 `json:"averageRequest,omitempty"`
+	MissingPodAverageRequest *int64 `json:"missingPodsAverageRequest,omitempty"`
+	MissingPodsCount         int    `json:"missingPodsCount,omitempty"`
+	UnreadyPodsCount         int    `json:"unreadyPodsCount,omitempty"`
 }
