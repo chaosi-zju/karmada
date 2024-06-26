@@ -1363,7 +1363,7 @@ func (c *FHPAController) setStatus(hpa *autoscalingv1alpha1.FederatedHPA, curren
 }
 
 // updateStatusIfNeeded calls updateStatus only if the status of the new HPA is not the same as the old status
-func (c *FHPAController) updateStatusIfNeeded(oldStatus *autoscalingv2.HorizontalPodAutoscalerStatus, newHPA *autoscalingv1alpha1.FederatedHPA) error {
+func (c *FHPAController) updateStatusIfNeeded(oldStatus *autoscalingv1alpha1.FederatedHPAStatus, newHPA *autoscalingv1alpha1.FederatedHPA) error {
 	// skip a write if we wouldn't need to update
 	if apiequality.Semantic.DeepEqual(oldStatus, &newHPA.Status) {
 		return nil

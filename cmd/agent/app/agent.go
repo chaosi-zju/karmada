@@ -451,8 +451,8 @@ func startDistributedHPAFollowerController(ctx controllerscontext.Context) (bool
 	ctx.ClusterSharedInformerFactory.Start(ctx.StopChan)
 	ctx.ClusterSharedInformerFactory.WaitForCacheSync(ctx.StopChan)
 
-	hpaClient := kubeclientset.NewForConfigOrDie(ctx.ClusterConfig)
-	scaleKindResolver := scale.NewDiscoveryScaleKindResolver(hpaClient.Discovery())
+	clusterKubeClient := kubeclientset.NewForConfigOrDie(ctx.ClusterConfig)
+	scaleKindResolver := scale.NewDiscoveryScaleKindResolver(clusterKubeClient.Discovery())
 	httpClient, err := rest.HTTPClientFor(ctx.ClusterConfig)
 	if err != nil {
 		return false, err
@@ -467,15 +467,15 @@ func startDistributedHPAFollowerController(ctx controllerscontext.Context) (bool
 		return false, err
 	}
 
-	apiVersionsGetter := custom_metrics.NewAvailableAPIsGetter(ctx.KubeClientSet.Discovery())
+	apiVersionsGetter := custom_metrics.NewAvailableAPIsGetter(clusterKubeClient.Discovery())
 	go custom_metrics.PeriodicallyInvalidate(
 		apiVersionsGetter,
 		ctx.Opts.HPAControllerConfiguration.HorizontalPodAutoscalerSyncPeriod.Duration,
 		ctx.StopChan)
 	metricsClient := metricsclient.NewRESTMetricsClient(
-		resourceclient.NewForConfigOrDie(ctx.Mgr.GetConfig()),
-		custom_metrics.NewForConfig(ctx.Mgr.GetConfig(), ctx.Mgr.GetRESTMapper(), apiVersionsGetter),
-		external_metrics.NewForConfigOrDie(ctx.Mgr.GetConfig()),
+		resourceclient.NewForConfigOrDie(ctx.ClusterConfig),
+		custom_metrics.NewForConfig(ctx.ClusterConfig, restMapper, apiVersionsGetter),
+		external_metrics.NewForConfigOrDie(ctx.ClusterConfig),
 	)
 	replicaCalculator := distributedhpafollower.NewReplicaCalculator(metricsClient, podLister,
 		ctx.Opts.HPAControllerConfiguration.HorizontalPodAutoscalerCPUInitializationPeriod.Duration,
