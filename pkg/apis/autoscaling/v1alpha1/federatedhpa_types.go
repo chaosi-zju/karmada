@@ -46,11 +46,17 @@ type FederatedHPA struct {
 
 	// Status is the current status of the FederatedHPA.
 	// +optional
-	Status autoscalingv2.HorizontalPodAutoscalerStatus `json:"status"`
+	Status FederatedHPAStatus `json:"status"`
 }
 
 // FederatedHPASpec describes the desired functionality of the FederatedHPA.
 type FederatedHPASpec struct {
+	// ScaleMode scale mode
+	// +kubebuilder:default="Center"
+	// +kubebuilder:validation:Enum=Center;Distributed
+	// +optional
+	ScaleMode ScaleMode `json:"scaleMode"`
+
 	// ScaleTargetRef points to the target resource to scale, and is used to
 	// the pods for which metrics should be collected, as well as to actually
 	// change the replica count.
@@ -93,4 +99,39 @@ type FederatedHPAList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []FederatedHPA `json:"items"`
+}
+
+// ScaleMode represents scale mode
+type ScaleMode string
+
+const (
+	// Center means center mode
+	Center ScaleMode = "Center"
+
+	// Distributed means distributed mode
+	Distributed ScaleMode = "Distributed"
+)
+
+type FederatedHPAStatus struct {
+	autoscalingv2.HorizontalPodAutoscalerStatus
+
+	// ClusterStatus is the current status of member cluster
+	// +optional
+	ClusterStatus map[string]FederatedHPAClusterStatus `json:"clusterStatus"`
+}
+
+type FederatedHPAClusterStatus struct {
+	ClusterMetric []*ClusterMetric `json:"metric"`
+}
+
+type ClusterMetric struct {
+	MetricName     string      `json:"metricName"`
+	MetricTotal    int64       `json:"metricTotal"`
+	MetricCount    int         `json:"metricCount"`
+	LastUpdateTime metav1.Time `json:"lastUpdateTime"`
+
+	UnreadyPodsCount       int    `json:"unreadyPodsCount"`
+	MissingPodsCount       int    `json:"missingPodsCount"`
+	MissingPodRequestTotal *int64 `json:"unreadyPodRequestTotal"`
+	RequestTotal           *int64 `json:"requestTotal"`
 }

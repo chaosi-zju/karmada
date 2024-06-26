@@ -26,6 +26,7 @@ import (
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	componentbaseconfig "k8s.io/component-base/config"
 
+	"github.com/karmada-io/karmada/pkg/controllers/federatedhpa/config"
 	"github.com/karmada-io/karmada/pkg/features"
 	"github.com/karmada-io/karmada/pkg/sharedcli/profileflag"
 	"github.com/karmada-io/karmada/pkg/sharedcli/ratelimiterflag"
@@ -108,6 +109,8 @@ type Options struct {
 	RateLimiterOpts ratelimiterflag.Options
 
 	ProfileOpts profileflag.Options
+
+	HPAControllerConfiguration config.HPAControllerConfiguration
 
 	// ReportSecrets specifies the secrets that are allowed to be reported to the Karmada control plane
 	// during registering.
@@ -218,4 +221,5 @@ func (o *Options) AddFlags(fs *pflag.FlagSet, allControllers []string) {
 	o.RateLimiterOpts.AddFlags(fs)
 	features.FeatureGate.AddFlag(fs)
 	o.ProfileOpts.AddFlags(fs)
+	o.HPAControllerConfiguration.AddFlags(fs)
 }

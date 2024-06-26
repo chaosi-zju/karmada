@@ -166,6 +166,11 @@ func (c *FHPAController) Reconcile(ctx context.Context, req controllerruntime.Re
 		return controllerruntime.Result{}, err
 	}
 
+	if hpa.Spec.ScaleMode != autoscalingv1alpha1.Center {
+		klog.V(4).Infof("No need to reconcile FederatedHPA %s.", req.NamespacedName.String())
+		return controllerruntime.Result{}, nil
+	}
+
 	c.hpaSelectorsMux.Lock()
 	if hpaKey := selectors.Parse(key); !c.hpaSelectors.SelectorExists(hpaKey) {
 		c.hpaSelectors.PutSelector(hpaKey, labels.Nothing())
@@ -1341,12 +1346,14 @@ func (c *FHPAController) setCurrentReplicasInStatus(hpa *autoscalingv1alpha1.Fed
 // setStatus recreates the status of the given HPA, updating the current and
 // desired replicas, as well as the metric statuses
 func (c *FHPAController) setStatus(hpa *autoscalingv1alpha1.FederatedHPA, currentReplicas, desiredReplicas int32, metricStatuses []autoscalingv2.MetricStatus, rescale bool) {
-	hpa.Status = autoscalingv2.HorizontalPodAutoscalerStatus{
-		CurrentReplicas: currentReplicas,
-		DesiredReplicas: desiredReplicas,
-		LastScaleTime:   hpa.Status.LastScaleTime,
-		CurrentMetrics:  metricStatuses,
-		Conditions:      hpa.Status.Conditions,
+	hpa.Status = autoscalingv1alpha1.FederatedHPAStatus{
+		HorizontalPodAutoscalerStatus: autoscalingv2.HorizontalPodAutoscalerStatus{
+			CurrentReplicas: currentReplicas,
+			DesiredReplicas: desiredReplicas,
+			LastScaleTime:   hpa.Status.LastScaleTime,
+			CurrentMetrics:  metricStatuses,
+			Conditions:      hpa.Status.Conditions,
+		},
 	}
 
 	if rescale {

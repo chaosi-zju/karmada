@@ -54,7 +54,7 @@ func ValidateFederatedHPA(fhpa *autoscalingv1alpha1.FederatedHPA) field.ErrorLis
 	minReplicasLowerBound := int32(1)
 	errs = append(errs, validateFederatedHPASpec(&fhpa.Spec, field.NewPath("spec"), minReplicasLowerBound)...)
 
-	errs = append(errs, validateFederatedHPAStatus(&fhpa.Status)...)
+	errs = append(errs, validateFederatedHPAStatus(&fhpa.Status.HorizontalPodAutoscalerStatus)...)
 	return errs
 }
 

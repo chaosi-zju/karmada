@@ -23,7 +23,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 
@@ -103,15 +105,17 @@ type Options struct {
 
 // Context defines the context object for controller.
 type Context struct {
-	Mgr                         controllerruntime.Manager
-	ObjectWatcher               objectwatcher.ObjectWatcher
-	Opts                        Options
-	StopChan                    <-chan struct{}
-	DynamicClientSet            dynamic.Interface
-	KubeClientSet               clientset.Interface
-	OverrideManager             overridemanager.OverrideManager
-	ControlPlaneInformerManager genericmanager.SingleClusterInformerManager
-	ResourceInterpreter         resourceinterpreter.ResourceInterpreter
+	Mgr                          controllerruntime.Manager
+	ObjectWatcher                objectwatcher.ObjectWatcher
+	Opts                         Options
+	StopChan                     <-chan struct{}
+	DynamicClientSet             dynamic.Interface
+	KubeClientSet                clientset.Interface
+	OverrideManager              overridemanager.OverrideManager
+	ControlPlaneInformerManager  genericmanager.SingleClusterInformerManager
+	ResourceInterpreter          resourceinterpreter.ResourceInterpreter
+	ClusterConfig                *rest.Config
+	ClusterSharedInformerFactory informers.SharedInformerFactory
 }
 
 // IsControllerEnabled check if a specified controller enabled or not.

@@ -30,11 +30,16 @@ import (
 	"k8s.io/client-go/informers"
 	kubeclientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/scale"
 	cliflag "k8s.io/component-base/cli/flag"
 	"k8s.io/component-base/term"
 	"k8s.io/klog/v2"
+	resourceclient "k8s.io/metrics/pkg/client/clientset/versioned/typed/metrics/v1beta1"
+	"k8s.io/metrics/pkg/client/custom_metrics"
+	"k8s.io/metrics/pkg/client/external_metrics"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/config"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	crtlmetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
@@ -47,6 +52,7 @@ import (
 	controllerscontext "github.com/karmada-io/karmada/pkg/controllers/context"
 	distributedhpafollower "github.com/karmada-io/karmada/pkg/controllers/distributedhpa/follower"
 	"github.com/karmada-io/karmada/pkg/controllers/execution"
+	metricsclient "github.com/karmada-io/karmada/pkg/controllers/federatedhpa/metrics"
 	"github.com/karmada-io/karmada/pkg/controllers/mcs"
 	"github.com/karmada-io/karmada/pkg/controllers/multiclusterservice"
 	"github.com/karmada-io/karmada/pkg/controllers/status"
@@ -199,7 +205,7 @@ func run(ctx context.Context, opts *options.Options) error {
 
 	controllerManager, err := controllerruntime.NewManager(controlPlaneRestConfig, controllerruntime.Options{
 		Scheme:                     gclient.NewSchema(),
-		Cache:                      cache.Options{SyncPeriod: &opts.ResyncPeriod.Duration, DefaultNamespaces: map[string]cache.Config{executionSpace: {}}},
+		Cache:                      cache.Options{SyncPeriod: &opts.ResyncPeriod.Duration, DefaultNamespaces: map[string]cache.Config{executionSpace: {}, "default": {}}},
 		LeaderElection:             opts.LeaderElection.LeaderElect,
 		LeaderElectionID:           fmt.Sprintf("karmada-agent-%s", opts.ClusterName),
 		LeaderElectionNamespace:    opts.LeaderElection.ResourceNamespace,
@@ -239,7 +245,7 @@ func run(ctx context.Context, opts *options.Options) error {
 	crtlmetrics.Registry.MustRegister(metrics.ResourceCollectorsForAgent()...)
 	crtlmetrics.Registry.MustRegister(metrics.PoolCollectors()...)
 
-	if err = setupControllers(controllerManager, opts, ctx.Done()); err != nil {
+	if err = setupControllers(controllerManager, opts, clusterConfig, ctx.Done()); err != nil {
 		return err
 	}
 
@@ -251,7 +257,7 @@ func run(ctx context.Context, opts *options.Options) error {
 	return nil
 }
 
-func setupControllers(mgr controllerruntime.Manager, opts *options.Options, stopChan <-chan struct{}) error {
+func setupControllers(mgr controllerruntime.Manager, opts *options.Options, clusterConfig *rest.Config, stopChan <-chan struct{}) error {
 	restConfig := mgr.GetConfig()
 	dynamicClientSet := dynamic.NewForConfigOrDie(restConfig)
 	controlPlaneInformerManager := genericmanager.NewSingleClusterInformerManager(dynamicClientSet, 0, stopChan)
@@ -263,6 +269,9 @@ func setupControllers(mgr controllerruntime.Manager, opts *options.Options, stop
 	serviceLister := sharedFactory.Core().V1().Services().Lister()
 	sharedFactory.Start(stopChan)
 	sharedFactory.WaitForCacheSync(stopChan)
+
+	clusterKubeClient := kubeclientset.NewForConfigOrDie(clusterConfig)
+	clusterSharedFactory := informers.NewSharedInformerFactory(clusterKubeClient, 0)
 
 	resourceInterpreter := resourceinterpreter.NewResourceInterpreter(controlPlaneInformerManager, serviceLister)
 	if err := mgr.Add(resourceInterpreter); err != nil {
@@ -290,9 +299,12 @@ func setupControllers(mgr controllerruntime.Manager, opts *options.Options, stop
 			CertRotationCheckingInterval:       opts.CertRotationCheckingInterval,
 			CertRotationRemainingTimeThreshold: opts.CertRotationRemainingTimeThreshold,
 			KarmadaKubeconfigNamespace:         opts.KarmadaKubeconfigNamespace,
+			HPAControllerConfiguration:         opts.HPAControllerConfiguration,
 		},
-		StopChan:            stopChan,
-		ResourceInterpreter: resourceInterpreter,
+		StopChan:                     stopChan,
+		ResourceInterpreter:          resourceInterpreter,
+		ClusterConfig:                clusterConfig,
+		ClusterSharedInformerFactory: clusterSharedFactory,
 	}
 
 	if err := controllers.StartControllers(controllerContext, controllersDisabledByDefault); err != nil {
@@ -435,8 +447,46 @@ func startCertRotationController(ctx controllerscontext.Context) (bool, error) {
 }
 
 func startDistributedHPAFollowerController(ctx controllerscontext.Context) (bool, error) {
+	podLister := ctx.ClusterSharedInformerFactory.Core().V1().Pods().Lister()
+	ctx.ClusterSharedInformerFactory.Start(ctx.StopChan)
+	ctx.ClusterSharedInformerFactory.WaitForCacheSync(ctx.StopChan)
+
+	hpaClient := kubeclientset.NewForConfigOrDie(ctx.ClusterConfig)
+	scaleKindResolver := scale.NewDiscoveryScaleKindResolver(hpaClient.Discovery())
+	httpClient, err := rest.HTTPClientFor(ctx.ClusterConfig)
+	if err != nil {
+		return false, err
+	}
+	restMapper, err := apiutil.NewDynamicRESTMapper(ctx.ClusterConfig, httpClient)
+	if err != nil {
+		return false, err
+	}
+
+	scaleClient, err := scale.NewForConfig(ctx.ClusterConfig, restMapper, dynamic.LegacyAPIPathResolverFunc, scaleKindResolver)
+	if err != nil {
+		return false, err
+	}
+
+	apiVersionsGetter := custom_metrics.NewAvailableAPIsGetter(ctx.KubeClientSet.Discovery())
+	go custom_metrics.PeriodicallyInvalidate(
+		apiVersionsGetter,
+		ctx.Opts.HPAControllerConfiguration.HorizontalPodAutoscalerSyncPeriod.Duration,
+		ctx.StopChan)
+	metricsClient := metricsclient.NewRESTMetricsClient(
+		resourceclient.NewForConfigOrDie(ctx.Mgr.GetConfig()),
+		custom_metrics.NewForConfig(ctx.Mgr.GetConfig(), ctx.Mgr.GetRESTMapper(), apiVersionsGetter),
+		external_metrics.NewForConfigOrDie(ctx.Mgr.GetConfig()),
+	)
+	replicaCalculator := distributedhpafollower.NewReplicaCalculator(metricsClient, podLister,
+		ctx.Opts.HPAControllerConfiguration.HorizontalPodAutoscalerCPUInitializationPeriod.Duration,
+		ctx.Opts.HPAControllerConfiguration.HorizontalPodAutoscalerInitialReadinessDelay.Duration)
 	distributedHPAController := distributedhpafollower.DistributedHPAController{
-		RatelimiterOptions: ctx.Opts.RateLimiterOptions,
+		Client:          ctx.Mgr.GetClient(),
+		ScaleNamespacer: scaleClient,
+		Mapper:          restMapper,
+		ReplicaCalc:     replicaCalculator,
+		PodLister:       podLister,
+		ResyncPeriod:    ctx.Opts.HPAControllerConfiguration.HorizontalPodAutoscalerSyncPeriod.Duration,
 	}
 	if err := distributedHPAController.SetupWithManager(ctx.Mgr); err != nil {
 		return false, err
