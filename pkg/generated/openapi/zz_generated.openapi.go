@@ -39,6 +39,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/karmada-io/karmada/pkg/apis/apps/v1alpha1.WorkloadRebalancerList":                        schema_pkg_apis_apps_v1alpha1_WorkloadRebalancerList(ref),
 		"github.com/karmada-io/karmada/pkg/apis/apps/v1alpha1.WorkloadRebalancerSpec":                        schema_pkg_apis_apps_v1alpha1_WorkloadRebalancerSpec(ref),
 		"github.com/karmada-io/karmada/pkg/apis/apps/v1alpha1.WorkloadRebalancerStatus":                      schema_pkg_apis_apps_v1alpha1_WorkloadRebalancerStatus(ref),
+		"github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1.ClusterMetric":                          schema_pkg_apis_autoscaling_v1alpha1_ClusterMetric(ref),
 		"github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1.CronFederatedHPA":                       schema_pkg_apis_autoscaling_v1alpha1_CronFederatedHPA(ref),
 		"github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1.CronFederatedHPAList":                   schema_pkg_apis_autoscaling_v1alpha1_CronFederatedHPAList(ref),
 		"github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1.CronFederatedHPARule":                   schema_pkg_apis_autoscaling_v1alpha1_CronFederatedHPARule(ref),
@@ -47,8 +48,10 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1.ExecutionHistory":                       schema_pkg_apis_autoscaling_v1alpha1_ExecutionHistory(ref),
 		"github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1.FailedExecution":                        schema_pkg_apis_autoscaling_v1alpha1_FailedExecution(ref),
 		"github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1.FederatedHPA":                           schema_pkg_apis_autoscaling_v1alpha1_FederatedHPA(ref),
+		"github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1.FederatedHPAClusterStatus":              schema_pkg_apis_autoscaling_v1alpha1_FederatedHPAClusterStatus(ref),
 		"github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1.FederatedHPAList":                       schema_pkg_apis_autoscaling_v1alpha1_FederatedHPAList(ref),
 		"github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1.FederatedHPASpec":                       schema_pkg_apis_autoscaling_v1alpha1_FederatedHPASpec(ref),
+		"github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1.FederatedHPAStatus":                     schema_pkg_apis_autoscaling_v1alpha1_FederatedHPAStatus(ref),
 		"github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1.SuccessfulExecution":                    schema_pkg_apis_autoscaling_v1alpha1_SuccessfulExecution(ref),
 		"github.com/karmada-io/karmada/pkg/apis/cluster/v1alpha1.APIEnablement":                              schema_pkg_apis_cluster_v1alpha1_APIEnablement(ref),
 		"github.com/karmada-io/karmada/pkg/apis/cluster/v1alpha1.APIResource":                                schema_pkg_apis_cluster_v1alpha1_APIResource(ref),
@@ -817,6 +820,73 @@ func schema_pkg_apis_apps_v1alpha1_WorkloadRebalancerStatus(ref common.Reference
 	}
 }
 
+func schema_pkg_apis_autoscaling_v1alpha1_ClusterMetric(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"metricName": {
+						SchemaProps: spec.SchemaProps{
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
+						},
+					},
+					"metricTotal": {
+						SchemaProps: spec.SchemaProps{
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int64",
+						},
+					},
+					"metricCount": {
+						SchemaProps: spec.SchemaProps{
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
+						},
+					},
+					"lastUpdateTime": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+						},
+					},
+					"unreadyPodsCount": {
+						SchemaProps: spec.SchemaProps{
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
+						},
+					},
+					"missingPodsCount": {
+						SchemaProps: spec.SchemaProps{
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
+						},
+					},
+					"unreadyPodRequestTotal": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
+					"requestTotal": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
+				},
+				Required: []string{"metricName", "metricTotal", "metricCount", "lastUpdateTime", "unreadyPodsCount", "missingPodsCount", "unreadyPodRequestTotal", "requestTotal"},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
+	}
+}
+
 func schema_pkg_apis_autoscaling_v1alpha1_CronFederatedHPA(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -1193,7 +1263,7 @@ func schema_pkg_apis_autoscaling_v1alpha1_FederatedHPA(ref common.ReferenceCallb
 						SchemaProps: spec.SchemaProps{
 							Description: "Status is the current status of the FederatedHPA.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/api/autoscaling/v2.HorizontalPodAutoscalerStatus"),
+							Ref:         ref("github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1.FederatedHPAStatus"),
 						},
 					},
 				},
@@ -1201,7 +1271,34 @@ func schema_pkg_apis_autoscaling_v1alpha1_FederatedHPA(ref common.ReferenceCallb
 			},
 		},
 		Dependencies: []string{
-			"github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1.FederatedHPASpec", "k8s.io/api/autoscaling/v2.HorizontalPodAutoscalerStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1.FederatedHPASpec", "github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1.FederatedHPAStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_autoscaling_v1alpha1_FederatedHPAClusterStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"metric": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1.ClusterMetric"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"metric"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1.ClusterMetric"},
 	}
 }
 
@@ -1261,6 +1358,14 @@ func schema_pkg_apis_autoscaling_v1alpha1_FederatedHPASpec(ref common.ReferenceC
 				Description: "FederatedHPASpec describes the desired functionality of the FederatedHPA.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"scaleMode": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ScaleMode scale mode",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"scaleTargetRef": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ScaleTargetRef points to the target resource to scale, and is used to the pods for which metrics should be collected, as well as to actually change the replica count.",
@@ -1309,6 +1414,107 @@ func schema_pkg_apis_autoscaling_v1alpha1_FederatedHPASpec(ref common.ReferenceC
 		},
 		Dependencies: []string{
 			"k8s.io/api/autoscaling/v2.CrossVersionObjectReference", "k8s.io/api/autoscaling/v2.HorizontalPodAutoscalerBehavior", "k8s.io/api/autoscaling/v2.MetricSpec"},
+	}
+}
+
+func schema_pkg_apis_autoscaling_v1alpha1_FederatedHPAStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"observedGeneration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "observedGeneration is the most recent generation observed by this autoscaler.",
+							Type:        []string{"integer"},
+							Format:      "int64",
+						},
+					},
+					"lastScaleTime": {
+						SchemaProps: spec.SchemaProps{
+							Description: "lastScaleTime is the last time the HorizontalPodAutoscaler scaled the number of pods, used by the autoscaler to control how often the number of pods is changed.",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+						},
+					},
+					"currentReplicas": {
+						SchemaProps: spec.SchemaProps{
+							Description: "currentReplicas is current number of replicas of pods managed by this autoscaler, as last seen by the autoscaler.",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"desiredReplicas": {
+						SchemaProps: spec.SchemaProps{
+							Description: "desiredReplicas is the desired number of replicas of pods managed by this autoscaler, as last calculated by the autoscaler.",
+							Default:     0,
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"currentMetrics": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "atomic",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "currentMetrics is the last read state of the metrics used by this autoscaler.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("k8s.io/api/autoscaling/v2.MetricStatus"),
+									},
+								},
+							},
+						},
+					},
+					"conditions": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"type",
+								},
+								"x-kubernetes-list-type":       "map",
+								"x-kubernetes-patch-merge-key": "type",
+								"x-kubernetes-patch-strategy":  "merge",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "conditions is the set of conditions required for this autoscaler to scale its target, and indicates whether or not those conditions are met.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("k8s.io/api/autoscaling/v2.HorizontalPodAutoscalerCondition"),
+									},
+								},
+							},
+						},
+					},
+					"clusterStatus": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ClusterStatus is the current status of member cluster",
+							Type:        []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1.FederatedHPAClusterStatus"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"desiredReplicas"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1.FederatedHPAClusterStatus", "k8s.io/api/autoscaling/v2.HorizontalPodAutoscalerCondition", "k8s.io/api/autoscaling/v2.MetricStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }
 

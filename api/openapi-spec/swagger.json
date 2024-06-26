@@ -16797,6 +16797,56 @@
         }
       }
     },
+    "com.github.karmada-io.karmada.pkg.apis.autoscaling.v1alpha1.ClusterMetric": {
+      "type": "object",
+      "required": [
+        "metricName",
+        "metricTotal",
+        "metricCount",
+        "lastUpdateTime",
+        "unreadyPodsCount",
+        "missingPodsCount",
+        "unreadyPodRequestTotal",
+        "requestTotal"
+      ],
+      "properties": {
+        "lastUpdateTime": {
+          "$ref": "#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.Time"
+        },
+        "metricCount": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "metricName": {
+          "type": "string",
+          "default": ""
+        },
+        "metricTotal": {
+          "type": "integer",
+          "format": "int64",
+          "default": 0
+        },
+        "missingPodsCount": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "requestTotal": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "unreadyPodRequestTotal": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "unreadyPodsCount": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        }
+      }
+    },
     "com.github.karmada-io.karmada.pkg.apis.autoscaling.v1alpha1.CronFederatedHPA": {
       "description": "CronFederatedHPA represents a collection of repeating schedule to scale replica number of a specific workload. It can scale any resource implementing the scale subresource as well as FederatedHPA.",
       "type": "object",
@@ -17045,7 +17095,7 @@
         "status": {
           "description": "Status is the current status of the FederatedHPA.",
           "default": {},
-          "$ref": "#/definitions/io.k8s.api.autoscaling.v2.HorizontalPodAutoscalerStatus"
+          "$ref": "#/definitions/com.github.karmada-io.karmada.pkg.apis.autoscaling.v1alpha1.FederatedHPAStatus"
         }
       },
       "x-kubernetes-group-version-kind": [
@@ -17055,6 +17105,20 @@
           "version": "v1alpha1"
         }
       ]
+    },
+    "com.github.karmada-io.karmada.pkg.apis.autoscaling.v1alpha1.FederatedHPAClusterStatus": {
+      "type": "object",
+      "required": [
+        "metric"
+      ],
+      "properties": {
+        "metric": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/com.github.karmada-io.karmada.pkg.apis.autoscaling.v1alpha1.ClusterMetric"
+          }
+        }
+      }
     },
     "com.github.karmada-io.karmada.pkg.apis.autoscaling.v1alpha1.FederatedHPAList": {
       "description": "FederatedHPAList contains a list of FederatedHPA.",
@@ -17122,10 +17186,74 @@
           "type": "integer",
           "format": "int32"
         },
+        "scaleMode": {
+          "description": "ScaleMode scale mode",
+          "type": "string",
+          "default": ""
+        },
         "scaleTargetRef": {
           "description": "ScaleTargetRef points to the target resource to scale, and is used to the pods for which metrics should be collected, as well as to actually change the replica count.",
           "default": {},
           "$ref": "#/definitions/io.k8s.api.autoscaling.v2.CrossVersionObjectReference"
+        }
+      }
+    },
+    "com.github.karmada-io.karmada.pkg.apis.autoscaling.v1alpha1.FederatedHPAStatus": {
+      "type": "object",
+      "required": [
+        "desiredReplicas"
+      ],
+      "properties": {
+        "clusterStatus": {
+          "description": "ClusterStatus is the current status of member cluster",
+          "type": "object",
+          "additionalProperties": {
+            "default": {},
+            "$ref": "#/definitions/com.github.karmada-io.karmada.pkg.apis.autoscaling.v1alpha1.FederatedHPAClusterStatus"
+          }
+        },
+        "conditions": {
+          "description": "conditions is the set of conditions required for this autoscaler to scale its target, and indicates whether or not those conditions are met.",
+          "type": "array",
+          "items": {
+            "default": {},
+            "$ref": "#/definitions/io.k8s.api.autoscaling.v2.HorizontalPodAutoscalerCondition"
+          },
+          "x-kubernetes-list-map-keys": [
+            "type"
+          ],
+          "x-kubernetes-list-type": "map",
+          "x-kubernetes-patch-merge-key": "type",
+          "x-kubernetes-patch-strategy": "merge"
+        },
+        "currentMetrics": {
+          "description": "currentMetrics is the last read state of the metrics used by this autoscaler.",
+          "type": "array",
+          "items": {
+            "default": {},
+            "$ref": "#/definitions/io.k8s.api.autoscaling.v2.MetricStatus"
+          },
+          "x-kubernetes-list-type": "atomic"
+        },
+        "currentReplicas": {
+          "description": "currentReplicas is current number of replicas of pods managed by this autoscaler, as last seen by the autoscaler.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "desiredReplicas": {
+          "description": "desiredReplicas is the desired number of replicas of pods managed by this autoscaler, as last calculated by the autoscaler.",
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "lastScaleTime": {
+          "description": "lastScaleTime is the last time the HorizontalPodAutoscaler scaled the number of pods, used by the autoscaler to control how often the number of pods is changed.",
+          "$ref": "#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.Time"
+        },
+        "observedGeneration": {
+          "description": "observedGeneration is the most recent generation observed by this autoscaler.",
+          "type": "integer",
+          "format": "int64"
         }
       }
     },
@@ -20482,58 +20610,6 @@
           "description": "type describes the current condition",
           "type": "string",
           "default": ""
-        }
-      }
-    },
-    "io.k8s.api.autoscaling.v2.HorizontalPodAutoscalerStatus": {
-      "description": "HorizontalPodAutoscalerStatus describes the current status of a horizontal pod autoscaler.",
-      "type": "object",
-      "required": [
-        "desiredReplicas"
-      ],
-      "properties": {
-        "conditions": {
-          "description": "conditions is the set of conditions required for this autoscaler to scale its target, and indicates whether or not those conditions are met.",
-          "type": "array",
-          "items": {
-            "default": {},
-            "$ref": "#/definitions/io.k8s.api.autoscaling.v2.HorizontalPodAutoscalerCondition"
-          },
-          "x-kubernetes-list-map-keys": [
-            "type"
-          ],
-          "x-kubernetes-list-type": "map",
-          "x-kubernetes-patch-merge-key": "type",
-          "x-kubernetes-patch-strategy": "merge"
-        },
-        "currentMetrics": {
-          "description": "currentMetrics is the last read state of the metrics used by this autoscaler.",
-          "type": "array",
-          "items": {
-            "default": {},
-            "$ref": "#/definitions/io.k8s.api.autoscaling.v2.MetricStatus"
-          },
-          "x-kubernetes-list-type": "atomic"
-        },
-        "currentReplicas": {
-          "description": "currentReplicas is current number of replicas of pods managed by this autoscaler, as last seen by the autoscaler.",
-          "type": "integer",
-          "format": "int32"
-        },
-        "desiredReplicas": {
-          "description": "desiredReplicas is the desired number of replicas of pods managed by this autoscaler, as last calculated by the autoscaler.",
-          "type": "integer",
-          "format": "int32",
-          "default": 0
-        },
-        "lastScaleTime": {
-          "description": "lastScaleTime is the last time the HorizontalPodAutoscaler scaled the number of pods, used by the autoscaler to control how often the number of pods is changed.",
-          "$ref": "#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.Time"
-        },
-        "observedGeneration": {
-          "description": "observedGeneration is the most recent generation observed by this autoscaler.",
-          "type": "integer",
-          "format": "int64"
         }
       }
     },

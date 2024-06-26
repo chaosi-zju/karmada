@@ -658,6 +658,13 @@ spec:
                   It defaults to 1 pod.
                 format: int32
                 type: integer
+              scaleMode:
+                default: Center
+                description: ScaleMode scale mode
+                enum:
+                - Center
+                - Distributed
+                type: string
               scaleTargetRef:
                 description: |-
                   ScaleTargetRef points to the target resource to scale, and is used to
@@ -684,6 +691,48 @@ spec:
           status:
             description: Status is the current status of the FederatedHPA.
             properties:
+              clusterStatus:
+                additionalProperties:
+                  properties:
+                    metric:
+                      items:
+                        properties:
+                          lastUpdateTime:
+                            format: date-time
+                            type: string
+                          metricCount:
+                            type: integer
+                          metricName:
+                            type: string
+                          metricTotal:
+                            format: int64
+                            type: integer
+                          missingPodsCount:
+                            type: integer
+                          requestTotal:
+                            format: int64
+                            type: integer
+                          unreadyPodRequestTotal:
+                            format: int64
+                            type: integer
+                          unreadyPodsCount:
+                            type: integer
+                        required:
+                        - lastUpdateTime
+                        - metricCount
+                        - metricName
+                        - metricTotal
+                        - missingPodsCount
+                        - requestTotal
+                        - unreadyPodRequestTotal
+                        - unreadyPodsCount
+                        type: object
+                      type: array
+                  required:
+                  - metric
+                  type: object
+                description: ClusterStatus is the current status of member cluster
+                type: object
               conditions:
                 description: |-
                   conditions is the set of conditions required for this autoscaler to scale its target,

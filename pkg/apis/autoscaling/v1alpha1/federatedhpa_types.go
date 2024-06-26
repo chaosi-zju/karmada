@@ -113,7 +113,7 @@ const (
 )
 
 type FederatedHPAStatus struct {
-	autoscalingv2.HorizontalPodAutoscalerStatus
+	autoscalingv2.HorizontalPodAutoscalerStatus `json:",inline"`
 
 	// ClusterStatus is the current status of member cluster
 	// +optional
