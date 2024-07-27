@@ -18,6 +18,7 @@ package e2e
 
 import (
 	"context"
+	"errors"
 	"sort"
 	"time"
 
@@ -146,6 +147,8 @@ var _ = ginkgo.Describe("deployment replicas syncer testing", func() {
 				framework.UpdateDeploymentReplicas(kubeClient, deployment, 2)
 				assertDeploymentWorkloadReplicas(namespace, deploymentName, targetClusters, []int32{3, 3})
 				assertDeploymentTemplateReplicas(namespace, deploymentName, 6)
+				err := errors.New("xx")
+				gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 			})
 		})
 	})
