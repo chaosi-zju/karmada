@@ -302,6 +302,7 @@ func reflectHorizontalPodAutoscalerStatus(object *unstructured.Unstructured) (*r
 	}
 
 	grabStatus := autoscalingv2.HorizontalPodAutoscalerStatus{
+		Conditions:      hpaStatus.Conditions,
 		CurrentReplicas: hpaStatus.CurrentReplicas,
 		DesiredReplicas: hpaStatus.DesiredReplicas,
 	}

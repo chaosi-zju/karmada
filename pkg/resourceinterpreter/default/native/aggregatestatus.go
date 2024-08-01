@@ -599,6 +599,7 @@ func aggregateHorizontalPodAutoscalerStatus(object *unstructured.Unstructured, a
 	}
 
 	newStatus := &autoscalingv2.HorizontalPodAutoscalerStatus{}
+	newConditions := make([]autoscalingv2.HorizontalPodAutoscalerCondition, 0)
 	for _, item := range aggregatedStatusItems {
 		if item.Status == nil {
 			continue
@@ -613,7 +614,9 @@ func aggregateHorizontalPodAutoscalerStatus(object *unstructured.Unstructured, a
 
 		newStatus.CurrentReplicas += temp.CurrentReplicas
 		newStatus.DesiredReplicas += temp.DesiredReplicas
+		newConditions = mergeConditions(newConditions, temp.Conditions)
 	}
+	newStatus.Conditions = newConditions
 
 	if reflect.DeepEqual(hpa.Status, *newStatus) {
 		klog.V(3).Infof("ignore update hpa(%s/%s) status as up to date", hpa.Namespace, hpa.Name)
@@ -622,4 +625,24 @@ func aggregateHorizontalPodAutoscalerStatus(object *unstructured.Unstructured, a
 
 	hpa.Status = *newStatus
 	return helper.ToUnstructured(hpa)
+}
+
+func mergeConditions(oldConditions, newConditions []autoscalingv2.HorizontalPodAutoscalerCondition) []autoscalingv2.HorizontalPodAutoscalerCondition {
+	for _, newCondition := range newConditions {
+		existSameType := false
+		for i, oldCondition := range oldConditions {
+			if oldCondition.Type != newCondition.Type {
+				continue
+			}
+			existSameType = true
+			if newCondition.Status == corev1.ConditionTrue {
+				continue
+			}
+			oldConditions[i] = newCondition
+		}
+		if !existSameType {
+			oldConditions = append(oldConditions, newCondition)
+		}
+	}
+	return oldConditions
 }
