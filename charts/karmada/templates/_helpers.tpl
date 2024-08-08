@@ -596,9 +596,8 @@ Return the proper Docker Image Registry Secret Names
     - |
       bash <<'EOF'
       set -ex
+      kubectl version
       ls -la /usr/bin
-      ls -la /bin
-      ls -la /usr/local/bin
       while true; do
         if curl --connect-timeout 2 ${ETCD_CLIENT_SERVICE_HOST}":"${ETCD_CLIENT_SERVICE_PORT} || [ $? -eq 52 ]; then
           break
