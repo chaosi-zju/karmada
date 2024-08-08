@@ -80,4 +80,4 @@ jobs:
 
       - name: Run chart-testing (install)
         if: steps.list-changed.outputs.changed == 'true'
-        run: ct install --debug --helm-extra-args "--timeout 800s"
+        run: ct install --debug --helm-extra-args "--timeout 180s"
