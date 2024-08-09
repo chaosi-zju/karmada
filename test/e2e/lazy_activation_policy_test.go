@@ -24,10 +24,13 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/rand"
+	"k8s.io/utils/pointer"
 	"k8s.io/utils/ptr"
 
 	policyv1alpha1 "github.com/karmada-io/karmada/pkg/apis/policy/v1alpha1"
+	workv1alpha2 "github.com/karmada-io/karmada/pkg/apis/work/v1alpha2"
 	"github.com/karmada-io/karmada/pkg/util"
+	"github.com/karmada-io/karmada/pkg/util/names"
 	"github.com/karmada-io/karmada/test/e2e/framework"
 	testhelper "github.com/karmada-io/karmada/test/helper"
 )
@@ -37,7 +40,7 @@ const waitIntervalForLazyPolicyTest = 3 * time.Second
 // e2e test for https://github.com/karmada-io/karmada/blob/release-1.9/docs/proposals/scheduling/activation-preference/lazy-activation-preference.md#test-plan
 var _ = ginkgo.Describe("Lazy activation policy testing", func() {
 	var namespace string
-	var deploymentName, configMapName, policyName, policyHigherPriorityName string
+	var deploymentName, configMapName, policyName, policyHigherPriorityName, bindingName string
 	var originalCluster, modifiedCluster string
 	var deployment *appsv1.Deployment
 	var configMap *corev1.ConfigMap
@@ -53,6 +56,7 @@ var _ = ginkgo.Describe("Lazy activation policy testing", func() {
 		modifiedCluster = framework.ClusterNames()[1]
 
 		deployment = testhelper.NewDeployment(namespace, deploymentName)
+		bindingName = names.GenerateBindingName(deployment.Kind, deployment.Name)
 		configMap = testhelper.NewConfigMap(namespace, configMapName, map[string]string{"test": "test"})
 		policy = testhelper.NewLazyPropagationPolicy(namespace, policyName, []policyv1alpha1.ResourceSelector{
 			{
@@ -269,12 +273,47 @@ var _ = ginkgo.Describe("Lazy activation policy testing", func() {
 			ginkgo.By("step1: deployment would not propagate when lazy policy created after deployment", func() {
 				// wait to distinguish whether the deployment will not propagate or have no time to propagate
 				time.Sleep(waitIntervalForLazyPolicyTest)
+				framework.WaitResourceBindingFitWith(karmadaClient, namespace, bindingName, func(rb *workv1alpha2.ResourceBinding) bool {
+					return *rb.Spec.Suspension.Dispatching == true
+				})
 				framework.WaitDeploymentDisappearOnCluster(originalCluster, namespace, deploymentName)
 			})
 
 			ginkgo.By("step2: resource would propagate when itself updated", func() {
 				updateDeploymentManually(deployment)
+				framework.WaitResourceBindingFitWith(karmadaClient, namespace, bindingName, func(rb *workv1alpha2.ResourceBinding) bool {
+					return *rb.Spec.Suspension.Dispatching == false
+				})
 				waitDeploymentPresentOnCluster(originalCluster, namespace, deploymentName)
+			})
+		})
+
+		ginkgo.Context("Policy created after resource && policy is suspension", func() {
+			ginkgo.BeforeEach(func() {
+				policy.Spec.Suspension = &policyv1alpha1.Suspension{Dispatching: pointer.Bool(true)}
+			})
+
+			ginkgo.It("Suspension Policy created after resource", func() {
+				ginkgo.By("step1: deployment would not propagate when lazy policy created after deployment", func() {
+					// wait to distinguish whether the deployment will not propagate or have no time to propagate
+					time.Sleep(waitIntervalForLazyPolicyTest)
+
+					framework.WaitResourceBindingFitWith(karmadaClient, namespace, bindingName, func(rb *workv1alpha2.ResourceBinding) bool {
+						return *rb.Spec.Suspension.Dispatching == true
+					})
+					framework.WaitDeploymentDisappearOnCluster(originalCluster, namespace, deploymentName)
+				})
+
+				ginkgo.By("step2: resource would suspend propagate when itself updated", func() {
+					updateDeploymentManually(deployment)
+					// wait to distinguish whether the deployment will not propagate or have no time to propagate
+					time.Sleep(waitIntervalForLazyPolicyTest)
+
+					framework.WaitResourceBindingFitWith(karmadaClient, namespace, bindingName, func(rb *workv1alpha2.ResourceBinding) bool {
+						return *rb.Spec.Suspension.Dispatching == true
+					})
+					framework.WaitDeploymentDisappearOnCluster(originalCluster, namespace, deploymentName)
+				})
 			})
 		})
 
