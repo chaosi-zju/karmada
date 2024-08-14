@@ -53,7 +53,15 @@ jobs:
             - all.yaml
           EOF
           
+          echo -e "\nstart\n"
+          ls -la
+          echo "--\n"
           cat post-render.sh
+          echo "--\n"
+          cat all.yaml
+          echo "--\n"
+          cat kustomization.yaml
+          echo -e "\nend\n"
           
           helm template --set components={"search,descheduler,schedulerEstimator"} --dependency-update ./charts/karmada \
             --post-renderer ./post-render.sh --debug > /dev/null
