@@ -54,13 +54,13 @@ jobs:
           EOF
           
           echo -e "\nstart\n"
-          tree
-          echo "--\n"
+          ls -la
+          echo -e "--\n"
           cat post-render.sh
-          echo "--\n"
-          cat all.yaml
-          echo "--\n"
+          echo -e "--\n"
           cat kustomization.yaml
+          echo -e "--\n"
+          cat all.yaml
           echo -e "\nend\n"
           
           helm template --set components={"search,descheduler,schedulerEstimator"} --dependency-update ./charts/karmada \
