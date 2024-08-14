@@ -54,7 +54,7 @@ jobs:
           EOF
           
           echo -e "\nstart\n"
-          ls -la
+          tree
           echo "--\n"
           cat post-render.sh
           echo "--\n"
