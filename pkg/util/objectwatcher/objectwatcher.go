@@ -18,6 +18,7 @@ package objectwatcher
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 
@@ -160,11 +161,17 @@ func (o *objectWatcherImpl) Update(ctx context.Context, clusterName string, desi
 	}
 
 	if err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		buf, _ := json.Marshal(desireObj)
+		klog.Infof("[DEBUG] obj before retained: %s", buf)
+
 		desireObj, err = o.retainClusterFields(desireObj, clusterObj)
 		if err != nil {
 			klog.Errorf("Failed to retain fields for resource(kind=%s, %s/%s) in cluster %s: %v", clusterObj.GetKind(), clusterObj.GetNamespace(), clusterObj.GetName(), clusterName, err)
 			return err
 		}
+
+		buf, _ = json.Marshal(desireObj)
+		klog.Infof("[DEBUG] obj after retained: %s", buf)
 
 		resource, updateErr := dynamicClusterClient.DynamicClientSet.Resource(gvr).Namespace(desireObj.GetNamespace()).Update(ctx, desireObj, metav1.UpdateOptions{})
 		if updateErr == nil {
