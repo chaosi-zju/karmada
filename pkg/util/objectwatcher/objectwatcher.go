@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/client-go/util/retry"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -158,22 +159,37 @@ func (o *objectWatcherImpl) Update(ctx context.Context, clusterName string, desi
 		return err
 	}
 
-	desireObj, err = o.retainClusterFields(desireObj, clusterObj)
-	if err != nil {
-		klog.Errorf("Failed to retain fields for resource(kind=%s, %s/%s) in cluster %s: %v", clusterObj.GetKind(), clusterObj.GetNamespace(), clusterObj.GetName(), clusterName, err)
+	if err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		desireObj, err = o.retainClusterFields(desireObj, clusterObj)
+		if err != nil {
+			klog.Errorf("Failed to retain fields for resource(kind=%s, %s/%s) in cluster %s: %v", clusterObj.GetKind(), clusterObj.GetNamespace(), clusterObj.GetName(), clusterName, err)
+			return err
+		}
+
+		resource, updateErr := dynamicClusterClient.DynamicClientSet.Resource(gvr).Namespace(desireObj.GetNamespace()).Update(ctx, desireObj, metav1.UpdateOptions{})
+		if updateErr == nil {
+			klog.Infof("Updated the resource(kind=%s, %s/%s) on cluster(%s) successfully.", desireObj.GetKind(), desireObj.GetNamespace(), desireObj.GetName(), clusterName)
+			// record version
+			o.recordVersion(resource, clusterName)
+			return nil
+		}
+
+		// If update failed due to cluster object conflict, fetch cluster object from kube-apiserver
+		// of member cluster instead of informer cache, to avoid repeated retry and failures,
+		// especially with a huge amount of cluster object and the informer cache doesn't sync quickly enough.
+		if updated, errGet := dynamicClusterClient.DynamicClientSet.Resource(gvr).Namespace(desireObj.GetNamespace()).Get(ctx, desireObj.GetName(), metav1.GetOptions{}); errGet != nil {
+			klog.Errorf("Failed to get resource(kind=%s, %s/%s) in cluster %s, err: %v", desireObj.GetKind(), desireObj.GetNamespace(), desireObj.GetName(), clusterName, errGet)
+		} else {
+			clusterObj = updated
+		}
+
+		klog.Errorf("Failed to update resource(kind=%s, %s/%s) in cluster %s, err: %v, retrying...", desireObj.GetKind(), desireObj.GetNamespace(), desireObj.GetName(), clusterName, updateErr)
+		return updateErr
+	}); err != nil {
+		klog.Errorf("Updating resources(kind=%s, %s/%s) in cluster %s eventually failed, err: %+v", desireObj.GetKind(), desireObj.GetNamespace(), desireObj.GetName(), clusterName, err)
 		return err
 	}
 
-	resource, err := dynamicClusterClient.DynamicClientSet.Resource(gvr).Namespace(desireObj.GetNamespace()).Update(ctx, desireObj, metav1.UpdateOptions{})
-	if err != nil {
-		klog.Errorf("Failed to update resource(kind=%s, %s/%s) in cluster %s, err: %v.", desireObj.GetKind(), desireObj.GetNamespace(), desireObj.GetName(), clusterName, err)
-		return err
-	}
-
-	klog.Infof("Updated the resource(kind=%s, %s/%s) on cluster(%s).", desireObj.GetKind(), desireObj.GetNamespace(), desireObj.GetName(), clusterName)
-
-	// record version
-	o.recordVersion(resource, clusterName)
 	return nil
 }
 
