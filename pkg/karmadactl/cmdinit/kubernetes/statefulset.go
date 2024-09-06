@@ -28,6 +28,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/karmada-io/karmada/pkg/karmadactl/cmdinit/options"
+	globaloptions "github.com/karmada-io/karmada/pkg/karmadactl/options"
 )
 
 const (
@@ -45,8 +46,6 @@ const (
 	etcdConfigName                     = "etcd.conf"
 	etcdEnvPodName                     = "POD_NAME"
 	etcdEnvPodIP                       = "POD_IP"
-	//secrets name
-	etcdCertName = "etcd-cert"
 )
 
 var (
@@ -60,10 +59,10 @@ func (i *CommandInitOption) etcdVolume() (*[]corev1.Volume, *corev1.PersistentVo
 	var Volumes []corev1.Volume
 
 	secretVolume := corev1.Volume{
-		Name: etcdCertName,
+		Name: globaloptions.KarmadaCertsName,
 		VolumeSource: corev1.VolumeSource{
 			Secret: &corev1.SecretVolumeSource{
-				SecretName: etcdCertName,
+				SecretName: globaloptions.KarmadaCertsName,
 			},
 		},
 	}
@@ -287,7 +286,7 @@ func (i *CommandInitOption) makeETCDStatefulSet() *appsv1.StatefulSet {
 						MountPath: etcdContainerConfigDataMountPath,
 					},
 					{
-						Name:      etcdCertName,
+						Name:      globaloptions.KarmadaCertsName,
 						ReadOnly:  true,
 						MountPath: karmadaCertsVolumeMountPath,
 					},

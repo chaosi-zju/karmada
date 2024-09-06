@@ -39,7 +39,8 @@ const (
 	defaultMetricsPort   = 8080
 
 	// KubeConfigSecretAndMountName is the secret and volume mount name of karmada kubeconfig
-	KubeConfigSecretAndMountName                                = "kubeconfig"
+	KubeConfigSecretAndMountName                                = "karmada-kubeconfig"
+	kubeConfigSubPathName                                       = "kubeconfig"
 	karmadaCertsVolumeMountPath                                 = "/etc/karmada/pki"
 	kubeConfigContainerMountPath                                = "/etc/kubeconfig"
 	karmadaAPIServerDeploymentAndServiceName                    = "karmada-apiserver"
@@ -52,7 +53,6 @@ const (
 	controllerManagerSecurePort                                 = 10357
 	webhookDeploymentAndServiceAccountAndServiceName            = "karmada-webhook"
 	webhookCertsName                                            = "karmada-webhook-cert"
-	webhookCertVolumeMountPath                                  = "/var/serving-cert"
 	webhookPortName                                             = "webhook"
 	webhookTargetPort                                           = 8443
 	webhookPort                                                 = 443
@@ -97,8 +97,8 @@ func (i *CommandInitOption) karmadaAPIServerContainerCommand() []string {
 		fmt.Sprintf("--apiserver-count=%v", i.KarmadaAPIServerReplicas),
 		fmt.Sprintf("--secure-port=%v", karmadaAPIServerContainerPort),
 		fmt.Sprintf("--service-account-issuer=https://kubernetes.default.svc.%s", i.HostClusterDomain),
-		fmt.Sprintf("--service-account-key-file=%s/%s.key", karmadaCertsVolumeMountPath, options.KarmadaCertAndKeyName),
-		fmt.Sprintf("--service-account-signing-key-file=%s/%s.key", karmadaCertsVolumeMountPath, options.KarmadaCertAndKeyName),
+		fmt.Sprintf("--service-account-key-file=%s/%s.key", karmadaCertsVolumeMountPath, options.KarmadaClientCertAndKeyName),
+		fmt.Sprintf("--service-account-signing-key-file=%s/%s.key", karmadaCertsVolumeMountPath, options.KarmadaClientCertAndKeyName),
 		fmt.Sprintf("--service-cluster-ip-range=%s", serviceClusterIP),
 		fmt.Sprintf("--proxy-client-cert-file=%s/%s.crt", karmadaCertsVolumeMountPath, options.FrontProxyClientCertAndKeyName),
 		fmt.Sprintf("--proxy-client-key-file=%s/%s.key", karmadaCertsVolumeMountPath, options.FrontProxyClientCertAndKeyName),
@@ -107,8 +107,8 @@ func (i *CommandInitOption) karmadaAPIServerContainerCommand() []string {
 		"--requestheader-extra-headers-prefix=X-Remote-Extra-",
 		"--requestheader-group-headers=X-Remote-Group",
 		"--requestheader-username-headers=X-Remote-User",
-		fmt.Sprintf("--tls-cert-file=%s/%s.crt", karmadaCertsVolumeMountPath, options.ApiserverCertAndKeyName),
-		fmt.Sprintf("--tls-private-key-file=%s/%s.key", karmadaCertsVolumeMountPath, options.ApiserverCertAndKeyName),
+		fmt.Sprintf("--tls-cert-file=%s/%s.crt", karmadaCertsVolumeMountPath, options.KarmadaServerCertAndKeyName),
+		fmt.Sprintf("--tls-private-key-file=%s/%s.key", karmadaCertsVolumeMountPath, options.KarmadaServerCertAndKeyName),
 		"--tls-min-version=VersionTLS13",
 	}
 	if i.ExternalEtcdKeyPrefix != "" {
@@ -317,7 +317,7 @@ func (i *CommandInitOption) makeKarmadaKubeControllerManagerDeployment() *appsv1
 					fmt.Sprintf("--leader-elect-resource-namespace=%s", i.Namespace),
 					"--node-cidr-mask-size=24",
 					fmt.Sprintf("--root-ca-file=%s/%s.crt", karmadaCertsVolumeMountPath, globaloptions.CaCertAndKeyName),
-					fmt.Sprintf("--service-account-private-key-file=%s/%s.key", karmadaCertsVolumeMountPath, options.KarmadaCertAndKeyName),
+					fmt.Sprintf("--service-account-private-key-file=%s/%s.key", karmadaCertsVolumeMountPath, options.KarmadaClientCertAndKeyName),
 					fmt.Sprintf("--service-cluster-ip-range=%s", serviceClusterIP),
 					"--use-service-account-credentials=true",
 					"--v=4",
@@ -335,7 +335,7 @@ func (i *CommandInitOption) makeKarmadaKubeControllerManagerDeployment() *appsv1
 						Name:      KubeConfigSecretAndMountName,
 						ReadOnly:  true,
 						MountPath: kubeConfigContainerMountPath,
-						SubPath:   KubeConfigSecretAndMountName,
+						SubPath:   kubeConfigSubPathName,
 					},
 					{
 						Name:      globaloptions.KarmadaCertsName,
@@ -453,9 +453,9 @@ func (i *CommandInitOption) makeKarmadaSchedulerDeployment() *appsv1.Deployment 
 					"--health-probe-bind-address=0.0.0.0:10351",
 					"--enable-scheduler-estimator=true",
 					"--leader-elect=true",
-					"--scheduler-estimator-ca-file=/etc/karmada/pki/ca.crt",
-					"--scheduler-estimator-cert-file=/etc/karmada/pki/karmada.crt",
-					"--scheduler-estimator-key-file=/etc/karmada/pki/karmada.key",
+					fmt.Sprintf("--scheduler-estimator-ca-file=%s/%s.crt", karmadaCertsVolumeMountPath, globaloptions.CaCertAndKeyName),
+					fmt.Sprintf("--scheduler-estimator-cert-file=%s/%s.crt", karmadaCertsVolumeMountPath, options.KarmadaClientCertAndKeyName),
+					fmt.Sprintf("--scheduler-estimator-key-file=%s/%s.key", karmadaCertsVolumeMountPath, options.KarmadaClientCertAndKeyName),
 					fmt.Sprintf("--leader-elect-resource-namespace=%s", i.Namespace),
 					"--v=4",
 				},
@@ -472,7 +472,7 @@ func (i *CommandInitOption) makeKarmadaSchedulerDeployment() *appsv1.Deployment 
 						Name:      KubeConfigSecretAndMountName,
 						ReadOnly:  true,
 						MountPath: kubeConfigContainerMountPath,
-						SubPath:   KubeConfigSecretAndMountName,
+						SubPath:   kubeConfigSubPathName,
 					},
 					{
 						Name:      globaloptions.KarmadaCertsName,
@@ -612,7 +612,7 @@ func (i *CommandInitOption) makeKarmadaControllerManagerDeployment() *appsv1.Dep
 						Name:      KubeConfigSecretAndMountName,
 						ReadOnly:  true,
 						MountPath: kubeConfigContainerMountPath,
-						SubPath:   KubeConfigSecretAndMountName,
+						SubPath:   kubeConfigSubPathName,
 					},
 				},
 			},
@@ -715,7 +715,7 @@ func (i *CommandInitOption) makeKarmadaWebhookDeployment() *appsv1.Deployment {
 					"--bind-address=0.0.0.0",
 					"--metrics-bind-address=:8080",
 					fmt.Sprintf("--secure-port=%v", webhookTargetPort),
-					fmt.Sprintf("--cert-dir=%s", webhookCertVolumeMountPath),
+					fmt.Sprintf("--cert-dir=%s", karmadaCertsVolumeMountPath),
 					"--v=4",
 				},
 				Ports: []corev1.ContainerPort{
@@ -735,12 +735,12 @@ func (i *CommandInitOption) makeKarmadaWebhookDeployment() *appsv1.Deployment {
 						Name:      KubeConfigSecretAndMountName,
 						ReadOnly:  true,
 						MountPath: kubeConfigContainerMountPath,
-						SubPath:   KubeConfigSecretAndMountName,
+						SubPath:   kubeConfigSubPathName,
 					},
 					{
 						Name:      webhookCertsName,
 						ReadOnly:  true,
-						MountPath: webhookCertVolumeMountPath,
+						MountPath: karmadaCertsVolumeMountPath,
 					},
 				},
 				ReadinessProbe: readinesProbe,
@@ -849,8 +849,8 @@ func (i *CommandInitOption) makeKarmadaAggregatedAPIServerDeployment() *appsv1.D
 		fmt.Sprintf("--etcd-cafile=%s/%s.crt", karmadaCertsVolumeMountPath, options.EtcdCaCertAndKeyName),
 		fmt.Sprintf("--etcd-certfile=%s/%s.crt", karmadaCertsVolumeMountPath, options.EtcdClientCertAndKeyName),
 		fmt.Sprintf("--etcd-keyfile=%s/%s.key", karmadaCertsVolumeMountPath, options.EtcdClientCertAndKeyName),
-		fmt.Sprintf("--tls-cert-file=%s/%s.crt", karmadaCertsVolumeMountPath, options.KarmadaCertAndKeyName),
-		fmt.Sprintf("--tls-private-key-file=%s/%s.key", karmadaCertsVolumeMountPath, options.KarmadaCertAndKeyName),
+		fmt.Sprintf("--tls-cert-file=%s/%s.crt", karmadaCertsVolumeMountPath, options.KarmadaServerCertAndKeyName),
+		fmt.Sprintf("--tls-private-key-file=%s/%s.key", karmadaCertsVolumeMountPath, options.KarmadaServerCertAndKeyName),
 		"--tls-min-version=VersionTLS13",
 		"--audit-log-path=-",
 		"--audit-log-maxage=0",
@@ -891,7 +891,7 @@ func (i *CommandInitOption) makeKarmadaAggregatedAPIServerDeployment() *appsv1.D
 						Name:      KubeConfigSecretAndMountName,
 						ReadOnly:  true,
 						MountPath: kubeConfigContainerMountPath,
-						SubPath:   KubeConfigSecretAndMountName,
+						SubPath:   kubeConfigSubPathName,
 					},
 					{
 						Name:      globaloptions.KarmadaCertsName,
