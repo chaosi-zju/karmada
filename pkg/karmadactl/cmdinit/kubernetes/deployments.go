@@ -39,7 +39,7 @@ const (
 	defaultMetricsPort   = 8080
 
 	// KubeConfigSecretAndMountName is the secret and volume mount name of karmada kubeconfig
-	KubeConfigSecretAndMountName                                = "karmada-kubeconfig"
+	KubeConfigSecretAndMountName                                = "karmadakubeconfig"
 	kubeConfigSubPathName                                       = "kubeconfig"
 	karmadaCertsVolumeMountPath                                 = "/etc/karmada/pki"
 	kubeConfigContainerMountPath                                = "/etc/kubeconfig"
