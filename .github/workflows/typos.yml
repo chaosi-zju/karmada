@@ -1,12 +1,12 @@
 name: Spellcheck Action
 on: push
+
 jobs:
-  build:
-    name: Spellcheck
+  spellcheck:
+    name: Typo CI (GitHub Action)
     runs-on: ubuntu-latest
+    timeout-minutes: 4
+    if: "!contains(github.event.head_commit.message, '[ci skip]')"
     steps:
-      - uses: actions/checkout@v3
-      - uses: rojopolis/spellcheck-github-actions@0.45.0
-        name: Spellcheck
-        with:
-          config_path: .spell.yml
+      - name: TypoCheck
+        uses: typoci/spellcheck-action@master
