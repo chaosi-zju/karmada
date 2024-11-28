@@ -105,7 +105,7 @@ func init() {
 	for _, m := range metrics {
 		legacyregistry.MustRegister(m)
 	}
-	workqueue.SetProvider(prometheusMetricsProvider{})
+	//workqueue.SetProvider(prometheusMetricsProvider{})
 }
 
 func (prometheusMetricsProvider) NewDepthMetric(name string) workqueue.GaugeMetric {

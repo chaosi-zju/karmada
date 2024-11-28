@@ -41,6 +41,17 @@ func WaitResourceBindingFitWith(client karmada.Interface, namespace, name string
 	}, pollTimeout, pollInterval).Should(gomega.Equal(true))
 }
 
+// WaitResourceBindingListFitWith wait resourceBindingList fit with util timeout
+func WaitResourceBindingListFitWith(client karmada.Interface, namespace string, fit func(resourceBindingList *workv1alpha2.ResourceBindingList) bool) {
+	gomega.Eventually(func() bool {
+		resourceBindingList, err := client.WorkV1alpha2().ResourceBindings(namespace).List(context.TODO(), metav1.ListOptions{})
+		if err != nil {
+			return false
+		}
+		return fit(resourceBindingList)
+	}, pollTimeout, pollInterval).Should(gomega.Equal(true))
+}
+
 // AssertBindingScheduledClusters wait deployment present on member clusters sync with fit func.
 // @expectedResults contains multiple possible results about expected clusters.
 func AssertBindingScheduledClusters(client karmada.Interface, namespace, name string, expectedResults [][]string) {
