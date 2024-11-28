@@ -11,4 +11,8 @@ matrix:
           comments: false
           ignores:
             - code
+            - pre
+    sources:
+      - '**/*.md'
+      - '**/*.go'
     default_encoding: utf-8
