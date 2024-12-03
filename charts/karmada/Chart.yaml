@@ -21,12 +21,12 @@ kubeVersion: ">= 1.16.0-0"
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
 # We use `0.0.0` as the latest chart version.
-version: 0.0.0
+version: 1.14.0
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
-appVersion: v1.1.0
+appVersion: v1.14.0
 
 # This is karmada dependencies
 dependencies:
