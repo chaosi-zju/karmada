@@ -37,7 +37,7 @@ if [ `grep -c "version: ${tag}" charts/index.yaml` -ge '2' ];then
 fi
 
 # step2: checkout a new branch
-git checkout -b ${NEWBRANCH}
+git checkout -b ${NEWBRANCH} origin/main
 
 # step3: update index for karmada-chart
 wget https://github.com/karmada-io/karmada/releases/download/${tag}/karmada-chart-${tag}.tgz -P charts/karmada/
@@ -57,22 +57,22 @@ git push origin ${NEWBRANCH}
 # step6: create pull request
 prtext=$(
     cat <<EOF
-      **What type of PR is this?**
+**What type of PR is this?**
 
-      /kind cleanup
+/kind cleanup
 
-      **What this PR does / why we need it**:
+**What this PR does / why we need it**:
 
-      Bump upgrade helm chart index to ${tag}
+Bump upgrade helm chart index to ${tag}
 
-      **Which issue(s) this PR fixes**:
+**Which issue(s) this PR fixes**:
 
-      Fixes
+Fixes
 
-      **Does this PR introduce a user-facing change?**:
-      \`\`\`release-note
-      upgrade helm chart index to ${tag}.
-      \`\`\`
+**Does this PR introduce a user-facing change?**:
+\`\`\`release-note
+upgrade helm chart index to ${tag}.
+\`\`\`
 EOF
 )
 gh pr create --title "Bump upgrade helm chart index to ${tag}" --body "${prtext}" --base master --head ${NEWBRANCH}
