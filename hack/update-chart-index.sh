@@ -37,7 +37,7 @@ if [ `grep -c "version: ${tag}" charts/index.yaml` -ge '2' ];then
 fi
 
 # step2: checkout a new branch
-git checkout -b ${NEWBRANCH} origin/main
+git checkout -b ${NEWBRANCH} origin/master
 
 # step3: update index for karmada-chart
 wget https://github.com/karmada-io/karmada/releases/download/${tag}/karmada-chart-${tag}.tgz -P charts/karmada/
