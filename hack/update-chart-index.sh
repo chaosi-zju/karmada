@@ -19,7 +19,6 @@ set -o pipefail
 
 REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 cd ${REPO_ROOT}
-git checkout -f master
 
 CURRENT_REMOTE=${CURRENT_REMOTE:-origin}
 CURRENT_REPO_ORG=${MAIN_REPO_ORG:-$(git remote get-url "$CURRENT_REMOTE" | awk '{gsub(/http[s]:\/\/|git@/,"")}1' | awk -F'[@:./]' 'NR==1{print $3}')}
@@ -44,7 +43,7 @@ if git branch -r | grep -q ${NEWBRANCH}; then
   echo "remote branch already exist!"
   exit 0
 fi
-git checkout -b ${NEWBRANCH} origin/master
+git checkout -b ${NEWBRANCH}
 
 # step3: update index for karmada-chart
 wget https://github.com/karmada-io/karmada/releases/download/${tag}/karmada-chart-${tag}.tgz -P charts/karmada/
