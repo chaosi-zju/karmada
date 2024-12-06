@@ -24,6 +24,8 @@ set -o pipefail
 # plane using the installation tool.
 # Note: This script works for both Linux and MacOS.
 
+exit 1
+
 REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 source "${REPO_ROOT}"/hack/util.sh
 
