@@ -17,12 +17,17 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+# This script used to update helm index to specific release version and automatically submit a pr to remote repo.
+# Usage:
+#   export CURRENT_REPO_ORG=karmada-io CURRENT_REPO_NAME=karmada tag=v1.12.0
+#   hack/update-helm-index.sh
+
 REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 cd ${REPO_ROOT}
 
 CURRENT_REMOTE=${CURRENT_REMOTE:-origin}
-CURRENT_REPO_ORG=${MAIN_REPO_ORG:-$(git remote get-url "$CURRENT_REMOTE" | awk '{gsub(/http[s]:\/\/|git@/,"")}1' | awk -F'[@:./]' 'NR==1{print $3}')}
-CURRENT_REPO_NAME=${MAIN_REPO_NAME:-$(git remote get-url "$CURRENT_REMOTE" | awk '{gsub(/http[s]:\/\/|git@/,"")}1' | awk -F'[@:./]' 'NR==1{print $4}')}
+CURRENT_REPO_ORG=${CURRENT_REPO_ORG:-$(git remote get-url "$CURRENT_REMOTE" | awk '{gsub(/http[s]:\/\/|git@/,"")}1' | awk -F'[@:./]' 'NR==1{print $3}')}
+CURRENT_REPO_NAME=${CURRENT_REPO_NAME:-$(git remote get-url "$CURRENT_REMOTE" | awk '{gsub(/http[s]:\/\/|git@/,"")}1' | awk -F'[@:./]' 'NR==1{print $4}')}
 
 get_latest_release_tag() {
   curl --silent "https://api.github.com/repos/$1/releases/latest" |
@@ -33,21 +38,18 @@ get_latest_release_tag() {
 # step1: get tag, defaults to latest release tag
 tag=${tag:-"$(get_latest_release_tag "${CURRENT_REPO_ORG}/${CURRENT_REPO_NAME}")"}
 if [ $(grep -c "version: ${tag}" charts/index.yaml) -ge '2' ]; then
-  echo "latest tag already in helm index!"
+  echo "the tag already in helm index!"
   exit 0
 fi
 
-echo "step1 finished"
-
 # step2: checkout a new branch
 NEWBRANCH="auto-helm-index-${tag}"
+git fetch -q
 if git branch -r | grep -q ${NEWBRANCH}; then
   echo "remote branch already exist!"
   exit 0
 fi
 git checkout -b ${NEWBRANCH}
-
-echo "step2 finished"
 
 # step3: update index for karmada-chart
 wget https://github.com/${CURRENT_REPO_ORG}/${CURRENT_REPO_NAME}/releases/download/${tag}/karmada-chart-${tag}.tgz -P charts/karmada/
@@ -59,14 +61,16 @@ wget https://github.com/${CURRENT_REPO_ORG}/${CURRENT_REPO_NAME}/releases/downlo
 helm repo index charts/karmada-operator --url https://github.com/${CURRENT_REPO_ORG}/${CURRENT_REPO_NAME}/releases/download/${tag} --merge charts/index.yaml
 mv charts/karmada-operator/index.yaml charts/index.yaml
 
-echo "step4 finished"
+# step5: the `helm repo index` command also generates index for dependencies(common-2.x.x) by default,
+# which is undesirable; therefore, the contents of the `common` field should be manaually removed.
+sed -i'' '/common:/,/version:/d' charts/index.yaml
+echo "successfully generated helm index."
 
-# step5: commit the modification
+# step6: commit the modification
 git add charts/index.yaml
 git commit -s -m "Bump upgrade helm chart index to ${tag}"
 git push origin ${NEWBRANCH}
-
-echo "step5 finished"
+echo "successfully pushed the commit."
 
 # step6: create pull request
 prtext=$(
@@ -90,3 +94,4 @@ upgrade helm chart index to ${tag}.
 EOF
 )
 gh pr create --title "Bump upgrade helm chart index to ${tag}" --body "${prtext}" --base master --head "${NEWBRANCH}" --repo="${CURRENT_REPO_ORG}/${CURRENT_REPO_NAME}"
+echo "successfully created the pr."
