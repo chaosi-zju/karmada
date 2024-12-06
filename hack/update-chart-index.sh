@@ -44,9 +44,8 @@ fi
 
 # step2: checkout a new branch
 NEWBRANCH="auto-helm-index-${tag}"
-git fetch -q
-if git branch -r | grep -q ${NEWBRANCH}; then
-  echo "remote branch already exist!"
+if git branch -r | grep -q "origin/${NEWBRANCH}"; then
+  echo 'remote branch '${NEWBRANCH}' already exist!'
   exit 0
 fi
 git checkout -b ${NEWBRANCH}
@@ -59,18 +58,19 @@ mv charts/karmada/index.yaml charts/index.yaml
 # step4: update index for karmada-operator-chart
 wget https://github.com/${CURRENT_REPO_ORG}/${CURRENT_REPO_NAME}/releases/download/${tag}/karmada-operator-chart-${tag}.tgz -P charts/karmada-operator/
 helm repo index charts/karmada-operator --url https://github.com/${CURRENT_REPO_ORG}/${CURRENT_REPO_NAME}/releases/download/${tag} --merge charts/index.yaml
-mv charts/karmada-operator/index.yaml charts/index.yaml
+cp charts/karmada-operator/index.yaml charts/index.yaml
 
 # step5: the `helm repo index` command also generates index for dependencies(common-2.x.x) by default,
 # which is undesirable; therefore, the contents of the `common` field should be manaually removed.
-sed -i'' '/common:/,/version:/d' charts/index.yaml
-echo "successfully generated helm index."
+# this `sed` command deletes lines between the line `entries:` and the line `karmada:`.
+sed -i'' '/entries:/,/karmada:/{//!d}' charts/index.yaml
+echo "Successfully generated helm index."
 
 # step6: commit the modification
 git add charts/index.yaml
 git commit -s -m "Bump upgrade helm chart index to ${tag}"
 git push origin ${NEWBRANCH}
-echo "successfully pushed the commit."
+echo "Successfully pushed the commit."
 
 # step6: create pull request
 prtext=$(
@@ -94,4 +94,4 @@ upgrade helm chart index to ${tag}.
 EOF
 )
 gh pr create --title "Bump upgrade helm chart index to ${tag}" --body "${prtext}" --base master --head "${NEWBRANCH}" --repo="${CURRENT_REPO_ORG}/${CURRENT_REPO_NAME}"
-echo "successfully created the pr."
+echo "Successfully created the pr."
