@@ -150,13 +150,8 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        export tag=${{ github.ref_name }}
-        echo $tag
-        pwd
-        git status
         git config user.name "$GITHUB_ACTOR"
         git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-        git fetch
         hack/update-chart-index.sh
   charts-provenance:
     needs: [release-charts]

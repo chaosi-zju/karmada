@@ -31,7 +31,7 @@ get_latest_release_tag() {
 }
 
 # step1: get tag, defaults to latest release tag
-tag=${tag:-"$(get_latest_release_tag "karmada-io/karmada")"}
+tag=${tag:-"$(get_latest_release_tag "${CURRENT_REPO_ORG}/${CURRENT_REPO_NAME}")"}
 if [ $(grep -c "version: ${tag}" charts/index.yaml) -ge '2' ]; then
   echo "latest tag already in helm index!"
   exit 0
@@ -50,13 +50,13 @@ git checkout -b ${NEWBRANCH}
 echo "step2 finished"
 
 # step3: update index for karmada-chart
-wget https://github.com/karmada-io/karmada/releases/download/${tag}/karmada-chart-${tag}.tgz -P charts/karmada/
-helm repo index charts/karmada --url https://github.com/karmada-io/karmada/releases/download/${tag} --merge charts/index.yaml
+wget https://github.com/${CURRENT_REPO_ORG}/${CURRENT_REPO_NAME}/releases/download/${tag}/karmada-chart-${tag}.tgz -P charts/karmada/
+helm repo index charts/karmada --url https://github.com/${CURRENT_REPO_ORG}/${CURRENT_REPO_NAME}/releases/download/${tag} --merge charts/index.yaml
 mv charts/karmada/index.yaml charts/index.yaml
 
 # step4: update index for karmada-operator-chart
-wget https://github.com/karmada-io/karmada/releases/download/${tag}/karmada-operator-chart-${tag}.tgz -P charts/karmada-operator/
-helm repo index charts/karmada-operator --url https://github.com/karmada-io/karmada/releases/download/${tag} --merge charts/index.yaml
+wget https://github.com/${CURRENT_REPO_ORG}/${CURRENT_REPO_NAME}/releases/download/${tag}/karmada-operator-chart-${tag}.tgz -P charts/karmada-operator/
+helm repo index charts/karmada-operator --url https://github.com/${CURRENT_REPO_ORG}/${CURRENT_REPO_NAME}/releases/download/${tag} --merge charts/index.yaml
 mv charts/karmada-operator/index.yaml charts/index.yaml
 
 echo "step4 finished"
