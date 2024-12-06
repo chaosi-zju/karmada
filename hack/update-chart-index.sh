@@ -44,7 +44,7 @@ fi
 
 # step2: checkout a new branch
 NEWBRANCH="auto-helm-index-${tag}"
-if git branch -r | grep -q "origin/${NEWBRANCH}"; then
+if [ $(git branch -r | grep -c "origin/${NEWBRANCH}") -ge '0' ]; then
   echo 'remote branch '${NEWBRANCH}' already exist!'
   exit 0
 fi
