@@ -3,6 +3,26 @@ entries:
   karmada:
   - apiVersion: v2
     appVersion: v1.1.0
+    created: "2024-12-06T08:05:42.259595017Z"
+    dependencies:
+    - name: common
+      repository: https://charts.bitnami.com/bitnami
+      version: 2.x.x
+    description: A Helm chart for karmada
+    digest: a65d99e111e285a348b03dd702a5068f15560dce3cb69ba8661bfd8ac9cb56b8
+    kubeVersion: '>= 1.16.0-0'
+    maintainers:
+    - email: chaosi@zju.edu.cn
+      name: chaosi-zju
+    - email: amiralavi7@gmail.com
+      name: a7i
+    name: karmada
+    type: application
+    urls:
+    - https://github.com/chaosi-zju/karmada/releases/download/v1.12.10/karmada-chart-v1.12.10.tgz
+    version: v1.12.10
+  - apiVersion: v2
+    appVersion: v1.1.0
     created: "2024-09-21T12:09:38.421759709+08:00"
     dependencies:
     - name: common
@@ -284,6 +304,28 @@ entries:
   karmada-operator:
   - apiVersion: v2
     appVersion: v1.1.0
+    created: "2024-12-06T08:05:42.560236694Z"
+    dependencies:
+    - name: common
+      repository: https://charts.bitnami.com/bitnami
+      version: 1.x.x
+    description: A Helm chart for karmada-operator
+    digest: 1c2a84378bb8a9574a032c51a607bae49c20682c97b05138b025a2b3479950f4
+    kubeVersion: '>= 1.16.0-0'
+    maintainers:
+    - email: wen.chen@daocloud.io
+      name: calvin0327
+    - email: chaosi@zju.edu.cn
+      name: chaosi-zju
+    - email: amiralavi7@gmail.com
+      name: a7i
+    name: karmada-operator
+    type: application
+    urls:
+    - https://github.com/chaosi-zju/karmada/releases/download/v1.12.10/karmada-operator-chart-v1.12.10.tgz
+    version: v1.12.10
+  - apiVersion: v2
+    appVersion: v1.1.0
     created: "2024-09-21T15:01:05.712207268+08:00"
     dependencies:
     - name: common
@@ -362,4 +404,4 @@ entries:
     urls:
     - https://github.com/karmada-io/karmada/releases/download/v1.8.0/karmada-operator-chart-v1.8.0.tgz
     version: v1.8.0
-generated: "2024-09-21T15:01:05.710041947+08:00"
+generated: "2024-12-06T08:05:42.558498838Z"
