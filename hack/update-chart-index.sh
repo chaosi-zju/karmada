@@ -37,6 +37,8 @@ if [ $(grep -c "version: ${tag}" charts/index.yaml) -ge '2' ]; then
   exit 0
 fi
 
+echo "step1 finished"
+
 # step2: checkout a new branch
 NEWBRANCH="auto-helm-index-${tag}"
 if git branch -r | grep -q ${NEWBRANCH}; then
@@ -44,6 +46,8 @@ if git branch -r | grep -q ${NEWBRANCH}; then
   exit 0
 fi
 git checkout -b ${NEWBRANCH}
+
+echo "step2 finished"
 
 # step3: update index for karmada-chart
 wget https://github.com/karmada-io/karmada/releases/download/${tag}/karmada-chart-${tag}.tgz -P charts/karmada/
@@ -55,10 +59,14 @@ wget https://github.com/karmada-io/karmada/releases/download/${tag}/karmada-oper
 helm repo index charts/karmada-operator --url https://github.com/karmada-io/karmada/releases/download/${tag} --merge charts/index.yaml
 mv charts/karmada-operator/index.yaml charts/index.yaml
 
+echo "step4 finished"
+
 # step5: commit the modification
 git add charts/index.yaml
 git commit -s -m "Bump upgrade helm chart index to ${tag}"
 git push origin ${NEWBRANCH}
+
+echo "step5 finished"
 
 # step6: create pull request
 prtext=$(
