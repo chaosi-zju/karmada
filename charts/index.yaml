@@ -1,81 +1,6 @@
 apiVersion: v1
 entries:
-  common:
-  - annotations:
-      category: Infrastructure
-      licenses: Apache-2.0
-    apiVersion: v2
-    appVersion: 2.27.0
-    created: "2024-12-06T03:22:58.284034471Z"
-    description: A Library Helm Chart for grouping common logic between bitnami charts.
-      This chart is not deployable by itself.
-    digest: 15e56d4ed76919d5bf7067ebe8e7e2f26e39532706a256b37e765143d9ab2e92
-    home: https://bitnami.com
-    icon: https://bitnami.com/downloads/logos/bitnami-mark.png
-    keywords:
-    - common
-    - helper
-    - template
-    - function
-    - bitnami
-    maintainers:
-    - name: Broadcom, Inc. All Rights Reserved.
-      url: https://github.com/bitnami/charts
-    name: common
-    sources:
-    - https://github.com/bitnami/charts/tree/main/bitnami/common
-    type: library
-    urls:
-    - https://github.com/chaosi-zju/karmada/releases/download/v1.12.2/charts/common-2.27.0.tgz
-    version: 2.27.0
-  - annotations:
-      category: Infrastructure
-    apiVersion: v2
-    appVersion: 1.17.1
-    created: "2024-12-06T03:22:58.904677827Z"
-    description: A Library Helm Chart for grouping common logic between bitnami charts.
-      This chart is not deployable by itself.
-    digest: 2a623d42475796af0ff0d18bbfa3b76ead1ccd7efab8280ea079b6a53f5ac627
-    home: https://github.com/bitnami/charts/tree/master/bitnami/common
-    icon: https://bitnami.com/downloads/logos/bitnami-mark.png
-    keywords:
-    - common
-    - helper
-    - template
-    - function
-    - bitnami
-    maintainers:
-    - name: Bitnami
-      url: https://github.com/bitnami/charts
-    name: common
-    sources:
-    - https://github.com/bitnami/charts
-    - https://www.bitnami.com/
-    type: library
-    urls:
-    - https://github.com/chaosi-zju/karmada/releases/download/v1.12.2/charts/common-1.17.1.tgz
-    version: 1.17.1
   karmada:
-  - apiVersion: v2
-    appVersion: v1.1.0
-    created: "2024-12-06T03:22:58.283450284Z"
-    dependencies:
-    - name: common
-      repository: https://charts.bitnami.com/bitnami
-      version: 2.x.x
-    description: A Helm chart for karmada
-    digest: 6aa862b43b5e37e17ba31141a0a10ae16830c38b5c520a13637894913c8ca827
-    kubeVersion: '>= 1.16.0-0'
-    maintainers:
-    - email: chaosi@zju.edu.cn
-      name: chaosi-zju
-    - email: amiralavi7@gmail.com
-      name: a7i
-    name: karmada
-    type: application
-    urls:
-    - https://github.com/chaosi-zju/karmada/releases/download/v1.12.2/karmada-chart-v1.12.2.tgz
-    version: v1.12.2
   - apiVersion: v2
     appVersion: v1.1.0
     created: "2024-09-21T12:09:38.421759709+08:00"
@@ -359,28 +284,6 @@ entries:
   karmada-operator:
   - apiVersion: v2
     appVersion: v1.1.0
-    created: "2024-12-06T03:22:58.903591883Z"
-    dependencies:
-    - name: common
-      repository: https://charts.bitnami.com/bitnami
-      version: 1.x.x
-    description: A Helm chart for karmada-operator
-    digest: 0ee98542a0a57061251ebb660bea85cfa233dec8f3a2730d7b593d8a4f802a34
-    kubeVersion: '>= 1.16.0-0'
-    maintainers:
-    - email: wen.chen@daocloud.io
-      name: calvin0327
-    - email: chaosi@zju.edu.cn
-      name: chaosi-zju
-    - email: amiralavi7@gmail.com
-      name: a7i
-    name: karmada-operator
-    type: application
-    urls:
-    - https://github.com/chaosi-zju/karmada/releases/download/v1.12.2/karmada-operator-chart-v1.12.2.tgz
-    version: v1.12.2
-  - apiVersion: v2
-    appVersion: v1.1.0
     created: "2024-09-21T15:01:05.712207268+08:00"
     dependencies:
     - name: common
@@ -459,4 +362,4 @@ entries:
     urls:
     - https://github.com/karmada-io/karmada/releases/download/v1.8.0/karmada-operator-chart-v1.8.0.tgz
     version: v1.8.0
-generated: "2024-12-06T03:22:58.901566854Z"
+generated: "2024-09-21T15:01:05.710041947+08:00"
