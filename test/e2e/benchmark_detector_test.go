@@ -19,9 +19,12 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"runtime"
+	"time"
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
+	"github.com/onsi/gomega/gmeasure"
 	"github.com/prometheus/common/model"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/util/rand"
@@ -36,7 +39,7 @@ import (
 )
 
 var _ = framework.SerialDescribe("detector benchmark testing", func() {
-	N := 100
+	N := 10
 	var deployments []*appsv1.Deployment
 	var policies []*policyv1alpha1.PropagationPolicy
 	var grabber *testhelper.Grabber
@@ -166,4 +169,42 @@ var _ = framework.SerialDescribe("detector benchmark testing", func() {
 			})
 		})
 	})
+
+	ginkgo.Context("policy delete benchmark testing", func() {
+		ginkgo.It("policy delete", func() {
+			experiment := gmeasure.NewExperiment("policy delete performance")
+			ginkgo.AddReportEntry(experiment.Name, experiment)
+
+			var m runtime.MemStats
+			runtime.ReadMemStats(&m)
+			experiment.RecordValue("Memory Usage", float64(m.Alloc/1024/1024), gmeasure.Style("{{red}}"), gmeasure.Precision(3), gmeasure.Units("MB"))
+
+			experiment.Sample(func(idx int) {
+				startSumMetric, startCountMetric := getDurationMetric(grabber, policyUpdateSumMetric, policyUpdateCountMetric, "propagationPolicy reconciler")
+				framework.RemovePropagationPolicyIfExist(karmadaClient, policies[idx].Namespace, policies[idx].Name)
+				endSumMetric, endCountMetric := getDurationMetric(grabber, policyUpdateSumMetric, policyUpdateCountMetric, "propagationPolicy reconciler")
+
+				secondsSum := endSumMetric.Value - startSumMetric.Value
+				secondsCnt := endCountMetric.Value - startCountMetric.Value
+				duration := secondsSum / secondsCnt
+
+				experiment.RecordValue("Runtime", float64(duration), gmeasure.Style("{{green}}"), gmeasure.Precision(time.Microsecond), gmeasure.Annotation(fmt.Sprintf("%d", idx)))
+
+			}, gmeasure.SamplingConfig{N: 100, Duration: 50 * time.Millisecond, NumParallel: 2})
+		})
+	})
 })
+
+func getDurationMetric(grabber *testhelper.Grabber, sumMetricName, countMetricName, sampleName string) (
+	sumMetric *model.Sample, countMetric *model.Sample) {
+	ginkgo.By("fetch metrics", func() {
+		metrics, err := grabber.GrabMetricsFromKarmadaControllerManager(context.TODO())
+		gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+
+		sumMetric = testhelper.GetMetricByName((*metrics)[sumMetricName], sampleName)
+		countMetric = testhelper.GetMetricByName((*metrics)[countMetricName], sampleName)
+		gomega.Expect(sumMetric).ShouldNot(gomega.BeNil())
+		gomega.Expect(countMetric).ShouldNot(gomega.BeNil())
+	})
+	return sumMetric, countMetric
+}
