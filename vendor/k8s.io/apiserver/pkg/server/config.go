@@ -90,6 +90,10 @@ import (
 	_ "k8s.io/apiserver/pkg/apis/apiserver/install"
 )
 
+func init(){
+	klog.Infof("[DEBUG] k8s.io/apiserver/pkg/server")
+}
+
 // hostnameFunc is a function to set the hostnameFunc of this apiserver.
 // To be used for testing purpose only, to simulate scenarios where multiple apiservers
 // exist. In such cases we want to ensure unique apiserver IDs which are a hash of hostnameFunc.

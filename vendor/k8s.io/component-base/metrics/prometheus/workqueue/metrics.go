@@ -18,6 +18,7 @@ package workqueue
 
 import (
 	"k8s.io/client-go/util/workqueue"
+	"k8s.io/klog/v2"
 	k8smetrics "k8s.io/component-base/metrics"
 	"k8s.io/component-base/metrics/legacyregistry"
 )
@@ -105,6 +106,7 @@ func init() {
 	for _, m := range metrics {
 		legacyregistry.MustRegister(m)
 	}
+	klog.Infof("[DEBUG] workqueue.SetProvider prometheusMetricsProvider")
 	workqueue.SetProvider(prometheusMetricsProvider{})
 }
 

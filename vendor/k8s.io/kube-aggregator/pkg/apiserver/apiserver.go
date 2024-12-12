@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/klog/v2"
 	"k8s.io/apiserver/pkg/endpoints/discovery/aggregated"
 	genericfeatures "k8s.io/apiserver/pkg/features"
 	peerreconcilers "k8s.io/apiserver/pkg/reconcilers"
@@ -62,6 +63,7 @@ import (
 var registerIntoLegacyRegistryOnce sync.Once
 
 func init() {
+	klog.Infof("[DEBUG] k8s.io/kube-aggregator/pkg/controllers/openapi/aggregator")
 	// we need to add the options (like ListOptions) to empty v1
 	metav1.AddToGroupVersion(aggregatorscheme.Scheme, schema.GroupVersion{Group: "", Version: "v1"})
 

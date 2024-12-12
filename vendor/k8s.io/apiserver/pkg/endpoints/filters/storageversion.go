@@ -33,6 +33,10 @@ import (
 	"k8s.io/klog/v2"
 )
 
+func init(){
+	klog.Infof("[DEBUG] k8s.io/apiserver/pkg/endpoints/filters")
+}
+
 // WithStorageVersionPrecondition checks if the storage version barrier has
 // completed, if not, it only passes the following API requests:
 // 1. non-resource requests,

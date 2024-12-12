@@ -19,6 +19,7 @@ package metrics
 import (
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/client-go/util/workqueue"
+	"k8s.io/klog/v2"
 )
 
 // This file is copied and adapted from k8s.io/component-base/metrics/prometheus/workqueue
@@ -96,6 +97,7 @@ func init() {
 	Registry.MustRegister(longestRunningProcessor)
 	Registry.MustRegister(retries)
 
+	klog.Infof("[DEBUG] workqueue.SetProvider workqueueMetricsProvider")
 	workqueue.SetProvider(workqueueMetricsProvider{})
 }
 

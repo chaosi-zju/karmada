@@ -31,6 +31,10 @@ import (
 	"k8s.io/klog/v2"
 )
 
+func init(){
+	klog.Infof("[DEBUG] k8s.io/apiserver/pkg/storageversion")
+}
+
 // ResourceInfo contains the information to register the resource to the
 // storage version API.
 type ResourceInfo struct {

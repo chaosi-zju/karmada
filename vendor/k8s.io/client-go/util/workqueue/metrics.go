@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"k8s.io/utils/clock"
+	"k8s.io/klog/v2"
 )
 
 // This file provides abstractions for setting the provider (e.g., prometheus)
@@ -222,6 +223,7 @@ type queueMetricsFactory struct {
 
 func (f *queueMetricsFactory) setProvider(mp MetricsProvider) {
 	f.onlyOnce.Do(func() {
+		klog.Infof("[DEBUG] mp: %T", mp)
 		f.metricsProvider = mp
 	})
 }
