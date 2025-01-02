@@ -16,7 +16,7 @@ permissions:
 jobs:
   e2e:
     name: e2e test
-    runs-on: macos-14
+    runs-on: macos-13
     strategy:
       fail-fast: false
       matrix:
@@ -48,14 +48,12 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+      - name: Setup Docker on macOS
+        uses: douglascamata/setup-docker-macos-action@v1-alpha
       - name: setup e2e test environment
         run: |
           export CLUSTER_VERSION=kindest/node:${{ matrix.k8s }}
           hack/local-up-karmada.sh
-      - name: run e2e
-        run: |
-          export ARTIFACTS_PATH=${{ github.workspace }}/karmada-e2e-logs/${{ matrix.k8s }}/
-          hack/run-e2e.sh
       - name: upload logs
         if: always()
         uses: actions/upload-artifact@v4
