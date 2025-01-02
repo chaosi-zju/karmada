@@ -41,7 +41,7 @@ jobs:
 
       - name: check metrics of metris-adapter
         run: |
-          export KUBECONFIG=~/.kube/karmada.config
+          export KUBECONFIG=~/.kube/karmada-host.config
           comp=karmada-metrics-adapter
           i=1; (kubectl port-forward `kubectl get pods -n karmada-system | grep $comp | sed -n $i'p' | awk '{print $1}'` -n karmada-system 8080 &)
           sleep 3
