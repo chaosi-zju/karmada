@@ -99,6 +99,7 @@ kind load docker-image "${REGISTRY}/karmada-controller-manager:${VERSION}" --nam
 kind load docker-image "${REGISTRY}/karmada-scheduler:${VERSION}" --name="${HOST_CLUSTER_NAME}"
 kind load docker-image "${REGISTRY}/karmada-webhook:${VERSION}" --name="${HOST_CLUSTER_NAME}"
 kind load docker-image "${REGISTRY}/karmada-aggregated-apiserver:${VERSION}" --name="${HOST_CLUSTER_NAME}"
+kind load docker-image "${REGISTRY}/karmada-metrics-adapter:${VERSION}" --name="${HOST_CLUSTER_NAME}"
 
 # init Karmada control plane
 echo "Start init karmada control plane..."
@@ -110,6 +111,9 @@ ${BUILD_PATH}/karmadactl init --kubeconfig=${KUBECONFIG_PATH}/${HOST_CLUSTER_NAM
     --karmada-data=${HOME}/karmada \
     --karmada-pki=${HOME}/karmada/pki \
     --crds=./crds.tar.gz
+
+export ${KUBECONFIG_PATH}/${HOST_CLUSTER_NAME}.config
+${BUILD_PATH}/karmadactl addons enable karmada-metrics-adapter
 
 # join cluster
 echo "Join member clusters..."
