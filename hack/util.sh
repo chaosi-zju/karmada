@@ -681,6 +681,7 @@ MAC_NIC_IPADDRESS=''
 function util::get_macos_ipaddress() {
   if [[ $(go env GOOS) = "darwin" ]]; then
     tmp_ip=$(ipconfig getifaddr en0 || true)
+    echo $tmp_ip
     echo ""
     echo " Detected that you are installing Karmada on macOS "
     echo ""
