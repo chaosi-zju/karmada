@@ -48,14 +48,8 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: Start SSH via ngrok
+      - name: Start SSH via tmate
         uses: P3TERX/ssh2actions@main
-        with:
-          mode: ngrok
-        env:
-          NGROK_TOKEN: ${{ secrets.NGROK_TOKEN }}
-          NGROK_REGION: us
-          SSH_PASSWORD: ${{ secrets.USER_PASS }}
       - name: Setup Docker on macOS
         uses: douglascamata/setup-docker-macos-action@v1-alpha
       - name: setup e2e test environment
