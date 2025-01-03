@@ -118,5 +118,5 @@ ${BUILD_PATH}/karmadactl --kubeconfig ${HOME}/karmada/karmada-apiserver.config  
 ${BUILD_PATH}/karmadactl --kubeconfig ${HOME}/karmada/karmada-apiserver.config  join ${MEMBER_CLUSTER_2_NAME} --cluster-kubeconfig=${KUBECONFIG_PATH}/${MEMBER_CLUSTER_2_NAME}.config
 kubectl wait --for=condition=Ready clusters --all --timeout=800s  --kubeconfig=${HOME}/karmada/karmada-apiserver.config
 
-export ${KUBECONFIG_PATH}/${HOST_CLUSTER_NAME}.config
+export KUBECONFIG=${KUBECONFIG_PATH}/${HOST_CLUSTER_NAME}.config
 ${BUILD_PATH}/karmadactl addons enable karmada-metrics-adapter
