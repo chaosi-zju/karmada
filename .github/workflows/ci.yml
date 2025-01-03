@@ -53,7 +53,7 @@ jobs:
       - name: setup e2e test environment
         run: |
           export CLUSTER_VERSION=kindest/node:${{ matrix.k8s }}
-          hack/local-up-karmada.sh
+          echo "\n" | hack/local-up-karmada.sh
       - name: upload logs
         if: always()
         uses: actions/upload-artifact@v4
