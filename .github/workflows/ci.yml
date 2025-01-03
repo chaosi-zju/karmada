@@ -48,6 +48,12 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+      - name: Breakpoint to check the build results
+        uses: namespacelabs/breakpoint-action@v0
+        with:
+          duration: 8h
+          authorized-users: chaosi-zju
+          shell: /bin/zsh
       - name: Setup Docker on macOS
         uses: douglascamata/setup-docker-macos-action@v1-alpha
       - name: Start SSH via tmate
