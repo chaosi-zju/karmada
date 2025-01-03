@@ -133,7 +133,7 @@ util::check_clusters_ready "${MEMBER_CLUSTER_2_TMP_CONFIG}" "${MEMBER_CLUSTER_2_
 util::check_clusters_ready "${PULL_MODE_CLUSTER_TMP_CONFIG}" "${PULL_MODE_CLUSTER_NAME}"
 
 #step4. load components images to kind cluster
-if [[ "${BUILD_FROM_SOURCE}" == "true" ]]; then
+if [[ "${BUILD_FROM_SOURCE}" != "false" ]]; then
   # host cluster
   kind load docker-image "${REGISTRY}/karmada-controller-manager:${VERSION}" --name="${HOST_CLUSTER_NAME}"
   kind load docker-image "${REGISTRY}/karmada-scheduler:${VERSION}" --name="${HOST_CLUSTER_NAME}"
