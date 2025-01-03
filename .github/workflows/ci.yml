@@ -48,14 +48,13 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: Start SSH via tmate
-        uses: P3TERX/ssh2actions@main
       - name: Setup Docker on macOS
         uses: douglascamata/setup-docker-macos-action@v1-alpha
+      - name: Start SSH via tmate
+        uses: P3TERX/ssh2actions@main
       - name: setup e2e test environment
         run: |
           export CLUSTER_VERSION=kindest/node:${{ matrix.k8s }}
-          
           echo "\n" | hack/local-up-karmada.sh
       - name: upload logs
         if: always()
