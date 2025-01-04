@@ -16,7 +16,7 @@ permissions:
 jobs:
   e2e:
     name: e2e test
-    runs-on: macos-15
+    runs-on: macos-14
     strategy:
       fail-fast: false
       matrix:
@@ -48,8 +48,8 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: Setup Docker on macOS
-        uses: douglascamata/setup-docker-macos-action@v1-alpha
+      #- name: Setup Docker on macOS
+      #  uses: douglascamata/setup-docker-macos-action@v1-alpha
       - name: Breakpoint to check the build results
         uses: namespacelabs/breakpoint-action@v0
         with:
