@@ -48,8 +48,8 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: Set up Docker
-        uses: docker/setup-docker-action@v4
+#      - name: Set up Docker
+#        uses: docker/setup-docker-action@v4
       - name: Breakpoint to check the build results
         uses: namespacelabs/breakpoint-action@v0
         with:
