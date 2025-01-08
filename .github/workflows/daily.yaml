@@ -1,0 +1,36 @@
+name: Daily Submit
+on:
+  push:
+  schedule:
+    # Run this workflow "At 9:00 UTC every day"
+    - cron: '0 9 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  daily-submit:
+    name: daily submit
+    if: ${{ github.repository == 'chaosi-zju/karmada' }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: run submit
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          
+          git remote add source https://github.com/karmada-io/karmada.git
+          git fetch source
+          git rebase source/master
+          
+          echo "$(date) daily submit" >> daily-submit.log
+          git add daily-submit.log
+          git commit -m "$(date) daily submit"
+          git push -f origin dependabot/daily
