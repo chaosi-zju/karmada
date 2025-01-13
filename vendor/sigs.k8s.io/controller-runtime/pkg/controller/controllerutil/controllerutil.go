@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/utils/ptr"
+	"k8s.io/klog/v2"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
@@ -309,7 +310,10 @@ func CreateOrUpdate(ctx context.Context, c client.Client, obj client.Object, f M
 		return OperationResultNone, err
 	}
 
+	klog.Infof("[DEBUG] judge equal: %+v", equality.Semantic.DeepEqual(existing, obj))
+
 	if equality.Semantic.DeepEqual(existing, obj) {
+		klog.Infof("[DEBUG] skiped")
 		return OperationResultNone, nil
 	}
 

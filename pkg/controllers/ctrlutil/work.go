@@ -17,9 +17,12 @@ limitations under the License.
 package ctrlutil
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 
+	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -49,10 +52,26 @@ func CreateOrUpdateWork(ctx context.Context, client client.Client, workMeta meta
 	}
 
 	workloadJSON, err := resource.MarshalJSON()
+	workloadJSON2, err := json.Marshal(resource)
 	if err != nil {
 		klog.Errorf("Failed to marshal workload(%s/%s), error: %v", resource.GetNamespace(), resource.GetName(), err)
 		return err
 	}
+	buffer := new(bytes.Buffer)
+	if err = json.Compact(buffer, workloadJSON); err != nil {
+		klog.Errorf("Failed to json.Compact, error: %v", err)
+		return err
+	}
+	workloadJSON3 := buffer.Bytes()
+
+	klog.Infof("[DEBUG] workloadJSON: %s", workloadJSON)
+	klog.Infof("[DEBUG] workloadJSON2: %s", workloadJSON2)
+	klog.Infof("[DEBUG] workloadJSON3: %s", workloadJSON3)
+
+	klog.Infof("[DEBUG] diff workloadJSON VS workloadJSON2: %+v", cmp.Diff(workloadJSON, workloadJSON2))
+	klog.Infof("[DEBUG] diff workloadJSON VS workloadJSON3: %+v", cmp.Diff(workloadJSON, workloadJSON3))
+	klog.Infof("[DEBUG] diff workloadJSON2 VS workloadJSON3: %+v", cmp.Diff(workloadJSON2, workloadJSON3))
+
 
 	work := &workv1alpha1.Work{
 		ObjectMeta: workMeta,
@@ -61,7 +80,7 @@ func CreateOrUpdateWork(ctx context.Context, client client.Client, workMeta meta
 				Manifests: []workv1alpha1.Manifest{
 					{
 						RawExtension: runtime.RawExtension{
-							Raw: workloadJSON,
+							Raw: workloadJSON3,
 						},
 					},
 				},
