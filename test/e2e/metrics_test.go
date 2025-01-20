@@ -91,7 +91,7 @@ var _ = ginkgo.Describe("metrics testing", func() {
 
 			for component, metricNameList := range componentMetrics {
 				ginkgo.By("judge metrics presence of component: "+component, func() {
-					podsMetrics, err := grabber.GrabMetricsFromComponent(context.TODO(), component)
+					podsMetrics, err := grabber.GrabMetricsFromComponent(context.TODO(), component, true)
 					gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 					for _, metricName := range metricNameList {

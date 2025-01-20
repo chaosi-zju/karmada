@@ -97,22 +97,34 @@ func NewMetricsGrabber(ctx context.Context, c clientset.Interface) (*Grabber, er
 	return &grabber, nil
 }
 
-// GrabMetricsFromComponent fetch metrics from the leader of a specified Karmada component
-func (g *Grabber) GrabMetricsFromComponent(ctx context.Context, component string) (map[string]testutil.Metrics, error) {
-	pods, fromLeader := make([]string, 0), false
+// GrabMetricsFromComponentLeader fetch metrics from the leader of a specified Karmada component
+func (g *Grabber) GrabMetricsFromComponentLeader(ctx context.Context, component string) (testutil.Metrics, error) {
+	metrisArr, err := g.GrabMetricsFromComponent(ctx, component, true)
+	if err != nil {
+		return testutil.Metrics{}, err
+	}
+	for _, metris := range metrisArr {
+		return metris, nil
+	}
+	return testutil.Metrics{}, fmt.Errorf("no metrics found from the leader pod of %s", component)
+}
+
+// GrabMetricsFromComponent fetch metrics from a specified Karmada component
+func (g *Grabber) GrabMetricsFromComponent(ctx context.Context, component string, fromLeader bool) (map[string]testutil.Metrics, error) {
+	pods := make([]string, 0)
 	switch component {
 	case names.KarmadaControllerManagerComponentName:
-		pods, fromLeader = g.controllerManagerPods, true
+		pods = g.controllerManagerPods
 	case names.KarmadaSchedulerComponentName:
-		pods, fromLeader = g.schedulerPods, true
+		pods = g.schedulerPods
 	case names.KarmadaDeschedulerComponentName:
-		pods, fromLeader = g.deschedulerPods, true
+		pods = g.deschedulerPods
 	case names.KarmadaMetricsAdapterComponentName:
-		pods = g.metricsAdapterPods
+		pods, fromLeader = g.metricsAdapterPods, false
 	case names.KarmadaSchedulerEstimatorComponentName:
-		pods = g.schedulerEstimatorPods
+		pods, fromLeader = g.schedulerEstimatorPods, false
 	case names.KarmadaWebhookComponentName:
-		pods = g.webhookPods
+		pods, fromLeader = g.webhookPods, false
 	}
 	return g.grabMetricsFromPod(ctx, component, pods, fromLeader)
 }
