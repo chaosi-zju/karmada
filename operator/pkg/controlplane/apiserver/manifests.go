@@ -163,9 +163,9 @@ spec:
         imagePullPolicy: {{ .ImagePullPolicy }}
         command:
         - /bin/karmada-aggregated-apiserver
-        - --kubeconfig=/etc/karmada/kubeconfig
-        - --authentication-kubeconfig=/etc/karmada/kubeconfig
-        - --authorization-kubeconfig=/etc/karmada/kubeconfig
+        - --kubeconfig=/etc/karmada/config/karmada.config
+        - --authentication-kubeconfig=/etc/karmada/config/karmada.config
+        - --authorization-kubeconfig=/etc/karmada/config/karmada.config
         - --tls-cert-file=/etc/karmada/pki/karmada.crt
         - --tls-private-key-file=/etc/karmada/pki/karmada.key
         - --tls-min-version=VersionTLS13
@@ -173,14 +173,13 @@ spec:
         - --audit-log-maxage=0
         - --audit-log-maxbackup=0
         volumeMounts:
-        - mountPath: /etc/karmada/kubeconfig
-          name: kubeconfig
-          subPath: kubeconfig
+        - mountPath: /etc/karmada/config
+          name: karmada-config
         - mountPath: /etc/karmada/pki
           name: apiserver-cert
           readOnly: true
       volumes:
-      - name: kubeconfig
+      - name: karmada-config
         secret:
           secretName: {{ .KubeconfigSecret }}
       - name: apiserver-cert

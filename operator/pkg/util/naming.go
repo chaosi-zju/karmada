@@ -29,6 +29,11 @@ func AdminKubeconfigSecretName(karmada string) string {
 	return generateResourceName(karmada, "admin-config")
 }
 
+// ComponentKubeconfigSecretName returns secret name of karmada component kubeconfig
+func ComponentKubeconfigSecretName(karmadaComponent string) string {
+	return generateResourceName(karmadaComponent, "config")
+}
+
 // KarmadaCertSecretName returns secret name of karmada certs
 func KarmadaCertSecretName(karmada string) string {
 	return generateResourceName(karmada, "cert")

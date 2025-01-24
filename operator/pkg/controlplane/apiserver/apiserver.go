@@ -124,7 +124,7 @@ func installKarmadaAggregatedAPIServer(client clientset.Interface, cfg *operator
 		Namespace:          namespace,
 		Image:              cfg.Image.Name(),
 		ImagePullPolicy:    string(cfg.ImagePullPolicy),
-		KubeconfigSecret:   util.AdminKubeconfigSecretName(name),
+		KubeconfigSecret:   util.ComponentKubeconfigSecretName(util.KarmadaAggregatedAPIServerName(name)),
 		KarmadaCertsSecret: util.KarmadaCertSecretName(name),
 		Replicas:           cfg.Replicas,
 	})

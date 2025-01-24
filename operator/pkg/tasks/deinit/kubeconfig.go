@@ -44,15 +44,35 @@ func runCleanupKubeconfig(r workflow.RunData) error {
 
 	klog.V(4).InfoS("[cleanup-kubeconfig] Running cleanup-kubeconfig task", "karmada", klog.KObj(data))
 
-	err := apiclient.DeleteSecretIfHasLabels(
-		data.RemoteClient(),
-		util.AdminKubeconfigSecretName(data.GetName()),
-		data.GetNamespace(),
-		constants.KarmadaOperatorLabel,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to cleanup karmada kubeconfig, err: %w", err)
+	secretNames := generateComponentKubeconfigSecretNames(data)
+
+	for _, secretName := range secretNames {
+		err := apiclient.DeleteSecretIfHasLabels(
+			data.RemoteClient(),
+			secretName,
+			data.GetNamespace(),
+			constants.KarmadaOperatorLabel,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to cleanup karmada kubeconfig secret '%s', err: %w", secretName, err)
+		}
 	}
 
 	return nil
+}
+
+func generateComponentKubeconfigSecretNames(data DeInitData) []string {
+	secretNames := []string{
+		util.AdminKubeconfigSecretName(data.GetName()),
+		util.ComponentKubeconfigSecretName(util.KarmadaAggregatedAPIServerName(data.GetName())),
+		util.ComponentKubeconfigSecretName(util.KarmadaControllerManagerName(data.GetName())),
+		util.ComponentKubeconfigSecretName(util.KubeControllerManagerName(data.GetName())),
+		util.ComponentKubeconfigSecretName(util.KarmadaSchedulerName(data.GetName())),
+		util.ComponentKubeconfigSecretName(util.KarmadaDeschedulerName(data.GetName())),
+		util.ComponentKubeconfigSecretName(util.KarmadaMetricsAdapterName(data.GetName())),
+		util.ComponentKubeconfigSecretName(util.KarmadaSearchName(data.GetName())),
+		util.ComponentKubeconfigSecretName(util.KarmadaWebhookName(data.GetName())),
+	}
+
+	return secretNames
 }
